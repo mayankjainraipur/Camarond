@@ -51,3 +51,12 @@ export async function createEvent(payload: Record<string, unknown>) {
 export async function getEventByCode(code: string) {
   return handle<EventOut>(await fetch(`/api/events/code/${encodeURIComponent(code)}`));
 }
+
+export async function verifyHostPassword(password: string): Promise<boolean> {
+  const res = await fetch("/api/auth/host-verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  return res.ok;
+}

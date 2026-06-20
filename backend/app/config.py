@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./camarond.db"
     cors_origins: str = "*"
+    host_password: str = "admin"
 
     @property
     def cors_origin_list(self) -> list[str]:

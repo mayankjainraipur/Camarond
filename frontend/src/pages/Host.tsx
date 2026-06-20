@@ -5,15 +5,23 @@ import {
   createEvent,
   listBanks,
   uploadBank,
+  verifyHostPassword,
 } from "../lib/api";
 import { emitAck, getSocket } from "../lib/socket";
 import { C2S, S2C, LeaderboardEntry, MonitorState, QuestionShow } from "../types/contracts";
 
+const SESSION_KEY = "host_auth";
+
 type Phase = "setup" | "live";
 
 export default function Host() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === "1");
   const [phase, setPhase] = useState<Phase>("setup");
   const [event, setEvent] = useState<EventOut | null>(null);
+
+  if (!authed) {
+    return <PasswordGate onSuccess={() => { sessionStorage.setItem(SESSION_KEY, "1"); setAuthed(true); }} />;
+  }
 
   return (
     <div className="wrap">
@@ -35,6 +43,44 @@ export default function Host() {
       ) : (
         event && <Live event={event} />
       )}
+    </div>
+  );
+}
+
+function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
+  const [pw, setPw] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    setBusy(true);
+    setError("");
+    const ok = await verifyHostPassword(pw);
+    setBusy(false);
+    if (ok) onSuccess();
+    else setError("Incorrect password.");
+  }
+
+  return (
+    <div className="wrap">
+      <div className="card">
+        <h1>Host access</h1>
+        <p className="muted">Enter the host password to continue.</p>
+        <label>Password</label>
+        <input
+          type="password"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && pw && !busy && submit()}
+          placeholder="••••••"
+          autoFocus
+        />
+        <div style={{ height: 12 }} />
+        <button className="block" disabled={!pw || busy} onClick={submit}>
+          {busy ? "Checking…" : "Enter"}
+        </button>
+        {error && <div className="error">{error}</div>}
+      </div>
     </div>
   );
 }

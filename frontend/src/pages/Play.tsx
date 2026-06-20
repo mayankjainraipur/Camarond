@@ -187,6 +187,7 @@ function QuestionView({ question, locked }: { question: QuestionShow; locked: bo
 
         {(question.type === "text" || question.type === "number") && (
           <FreeInput
+            key={question.questionId}
             type={question.type}
             disabled={disabled}
             onSubmit={(v) => submit(v)}
