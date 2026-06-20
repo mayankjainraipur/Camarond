@@ -1,0 +1,11 @@
+type,content,correct_answer,options,category,difficulty
+mcq,What is the capital of Japan?,Tokyo,Tokyo|Seoul|Bangkok|Beijing,Geography,2
+mcq,Which language runs FastAPI?,Python,Python|Java|Go|Ruby,Technology,3
+true_false,The Earth revolves around the Sun.,True,,Science,1
+true_false,HTTP is a stateful protocol.,False,,Technology,4
+number,How many players are there in a cricket team?,11,,Cricket,2
+number,What is 7 multiplied by 8?,56,,General Knowledge,1
+text,Who invented the telephone?,Alexander Graham Bell,,History,5
+text,What does CPU stand for?,Central Processing Unit,,Technology,4
+mcq,Who wrote Romeo and Juliet?,William Shakespeare,William Shakespeare|Charles Dickens|Mark Twain|Jane Austen,Movies,3
+mcq,Which planet is known as the Red Planet?,Mars,Mars|Venus|Jupiter|Saturn,Science,2

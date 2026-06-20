@@ -1,0 +1,69 @@
+// Wire contract — keep in sync with backend/app/realtime/events.py.
+// This is the manual "shared types" step: a Python backend can't share types
+// with the TS frontend automatically, so the socket contract lives in both.
+
+export const C2S = {
+  HOST_JOIN: "host:join",
+  HOST_START: "host:start",
+  HOST_NEXT: "host:next",
+  HOST_PAUSE: "host:pause",
+  HOST_RESUME: "host:resume",
+  HOST_END: "host:end",
+  PARTICIPANT_JOIN: "participant:join",
+  PARTICIPANT_ANSWER: "participant:answer",
+} as const;
+
+export const S2C = {
+  EVENT_STATE: "event:state",
+  LOBBY_UPDATE: "lobby:update",
+  QUESTION_SHOW: "question:show",
+  QUESTION_LOCK: "question:lock",
+  LEADERBOARD_UPDATE: "leaderboard:update",
+  HOST_MONITOR: "host:monitor",
+  EVENT_COMPLETE: "event:complete",
+  ERROR: "error",
+} as const;
+
+export type QuestionType = "mcq" | "text" | "number" | "true_false";
+
+export interface QuestionShow {
+  eventId: number;
+  index: number;
+  total: number;
+  questionId: number;
+  type: QuestionType;
+  content: string;
+  options: string[] | null;
+  timeLimit: number;
+  startedAt: number;
+}
+
+export interface LobbyState {
+  eventId: number;
+  eventName: string;
+  state: string;
+  participantCount: number;
+  participants: string[];
+  total: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  name: string;
+  score: number;
+}
+
+export interface MonitorState {
+  eventId: number;
+  state: string;
+  index: number;
+  total: number;
+  participantCount: number;
+  answeredCount: number;
+}
+
+export interface EventComplete {
+  eventId: number;
+  leaderboard: LeaderboardEntry[];
+  winner: LeaderboardEntry | null;
+}
