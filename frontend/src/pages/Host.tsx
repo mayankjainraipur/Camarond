@@ -39,6 +39,12 @@ export default function Host() {
     localStorage.removeItem(LIVE_EVENT_KEY);
   }
 
+  function resetToSetup() {
+    localStorage.removeItem(LIVE_EVENT_KEY);
+    setEvent(null);
+    setPhase("setup");
+  }
+
   return (
     <div className="wrap">
       <div className="card">
@@ -52,7 +58,7 @@ export default function Host() {
       {phase === "setup" ? (
         <Setup onReady={goLive} />
       ) : (
-        event && <Live event={event} onDone={clearLive} />
+        event && <Live event={event} onDone={clearLive} onNewEvent={resetToSetup} />
       )}
     </div>
   );
@@ -186,7 +192,7 @@ function Setup({ onReady }: { onReady: (ev: EventOut) => void }) {
   );
 }
 
-function Live({ event, onDone }: { event: EventOut; onDone: () => void }) {
+function Live({ event, onDone, onNewEvent }: { event: EventOut; onDone: () => void; onNewEvent: () => void }) {
   const [lobby, setLobby] = useState<{ participants: string[] } | null>(null);
   const [monitor, setMonitor] = useState<MonitorState | null>(null);
   const [question, setQuestion] = useState<QuestionShow | null>(null);
@@ -263,7 +269,7 @@ function Live({ event, onDone }: { event: EventOut; onDone: () => void }) {
       <div className="card">
         <h2>Controls</h2>
         <div className="row">
-          {!started && (
+          {!started && !done && (
             <button onClick={() => emitAck(C2S.HOST_START, { eventId: event.id })}>
               Start event
             </button>
@@ -278,8 +284,11 @@ function Live({ event, onDone }: { event: EventOut; onDone: () => void }) {
               End event
             </button>
           )}
+          {done && (
+            <button onClick={onNewEvent}>New event</button>
+          )}
         </div>
-        {!started && <p className="muted">Waiting in lobby: {lobby?.participants?.join(", ") || "—"}</p>}
+        {!started && !done && <p className="muted">Waiting in lobby: {lobby?.participants?.join(", ") || "—"}</p>}
       </div>
 
       {board.length > 0 && (

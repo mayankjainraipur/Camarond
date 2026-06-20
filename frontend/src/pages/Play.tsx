@@ -50,7 +50,9 @@ export default function Play() {
     setError("");
     const res = await emitAck<any>(C2S.PARTICIPANT_JOIN, { code, displayName: name });
     if (!res?.ok) {
-      setError(res?.error === "invalid_code" ? "Invalid event code." : "Could not join.");
+      if (res?.error === "invalid_code") setError("Invalid event code.");
+      else if (res?.error === "event_ended") setError("This event has already ended.");
+      else setError("Could not join.");
       return;
     }
     setEventName(res.eventName);

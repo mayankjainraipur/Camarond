@@ -149,6 +149,8 @@ async def participant_join(sid, data):
     session = game_manager.get_or_load(event_id)
     if session is None:
         return {"ok": False, "error": "event_not_found"}
+    if session.state == COMPLETED:
+        return {"ok": False, "error": "event_ended"}
 
     await sio.enter_room(sid, _room(event_id))
     _sid_event[sid] = event_id

@@ -224,6 +224,7 @@ class GameManager:
                 leaderboard_after_each=event.leaderboard_after_each,
                 auto_advance=event.auto_advance,
                 questions=questions,
+                state=COMPLETED if event.status == COMPLETED else LOBBY,
             )
 
 
