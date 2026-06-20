@@ -11,16 +11,32 @@ import { emitAck, getSocket } from "../lib/socket";
 import { C2S, S2C, LeaderboardEntry, MonitorState, QuestionShow } from "../types/contracts";
 
 const SESSION_KEY = "host_auth";
+const LIVE_EVENT_KEY = "host_live_event";
 
 type Phase = "setup" | "live";
 
 export default function Host() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === "1");
-  const [phase, setPhase] = useState<Phase>("setup");
-  const [event, setEvent] = useState<EventOut | null>(null);
+  const [phase, setPhase] = useState<Phase>(() =>
+    localStorage.getItem(LIVE_EVENT_KEY) ? "live" : "setup"
+  );
+  const [event, setEvent] = useState<EventOut | null>(() => {
+    const raw = localStorage.getItem(LIVE_EVENT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  });
 
   if (!authed) {
     return <PasswordGate onSuccess={() => { sessionStorage.setItem(SESSION_KEY, "1"); setAuthed(true); }} />;
+  }
+
+  function goLive(ev: EventOut) {
+    localStorage.setItem(LIVE_EVENT_KEY, JSON.stringify(ev));
+    setEvent(ev);
+    setPhase("live");
+  }
+
+  function clearLive() {
+    localStorage.removeItem(LIVE_EVENT_KEY);
   }
 
   return (
@@ -34,14 +50,9 @@ export default function Host() {
         </p>
       </div>
       {phase === "setup" ? (
-        <Setup
-          onReady={(ev) => {
-            setEvent(ev);
-            setPhase("live");
-          }}
-        />
+        <Setup onReady={goLive} />
       ) : (
-        event && <Live event={event} />
+        event && <Live event={event} onDone={clearLive} />
       )}
     </div>
   );
@@ -175,7 +186,7 @@ function Setup({ onReady }: { onReady: (ev: EventOut) => void }) {
   );
 }
 
-function Live({ event }: { event: EventOut }) {
+function Live({ event, onDone }: { event: EventOut; onDone: () => void }) {
   const [lobby, setLobby] = useState<{ participants: string[] } | null>(null);
   const [monitor, setMonitor] = useState<MonitorState | null>(null);
   const [question, setQuestion] = useState<QuestionShow | null>(null);
@@ -193,6 +204,7 @@ function Live({ event }: { event: EventOut }) {
     const onComplete = (d: { leaderboard: LeaderboardEntry[] }) => {
       setBoard(d.leaderboard);
       setDone(true);
+      onDone();
     };
     s.on(S2C.LOBBY_UPDATE, onLobby);
     s.on(S2C.HOST_MONITOR, onMonitor);
@@ -200,7 +212,13 @@ function Live({ event }: { event: EventOut }) {
     s.on(S2C.LEADERBOARD_UPDATE, onBoard);
     s.on(S2C.EVENT_COMPLETE, onComplete);
 
-    emitAck(C2S.HOST_JOIN, { eventId: event.id });
+    emitAck<any>(C2S.HOST_JOIN, { eventId: event.id }).then((ack) => {
+      if (!ack?.ok) return;
+      if (ack.monitor) setMonitor(ack.monitor);
+      if (ack.currentQuestion) setQuestion(ack.currentQuestion);
+      if (ack.leaderboard?.length) setBoard(ack.leaderboard);
+      if (ack.sessionState === "completed") { setDone(true); onDone(); }
+    });
 
     return () => {
       s.off(S2C.LOBBY_UPDATE, onLobby);

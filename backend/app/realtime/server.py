@@ -15,7 +15,7 @@ from ..config import settings
 from ..database import SessionLocal
 from ..models import Event
 from .events import C2S, S2C
-from .manager import COMPLETED, QUESTION, game_manager
+from .manager import COMPLETED, LOCKED, QUESTION, game_manager
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -77,7 +77,16 @@ async def host_join(sid, data):
     _sid_event[sid] = event_id
 
     await sio.emit(S2C.LOBBY_UPDATE, session.lobby_state(), room=_host_room(event_id))
-    return {"ok": True, "state": session.lobby_state(), "monitor": session.monitor_state()}
+    payload: dict = {
+        "ok": True,
+        "state": session.lobby_state(),
+        "monitor": session.monitor_state(),
+        "sessionState": session.state,
+        "leaderboard": session.leaderboard(),
+    }
+    if session.state in (QUESTION, LOCKED):
+        payload["currentQuestion"] = session.question_payload()
+    return payload
 
 
 @sio.on(C2S.HOST_START)
