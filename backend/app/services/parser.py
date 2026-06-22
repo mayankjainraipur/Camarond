@@ -58,8 +58,8 @@ def parse_questions(filename: str, raw: bytes) -> tuple[list[dict], list[str]]:
     questions: list[dict] = []
     errors: list[str] = []
 
-    for i, row in df.iterrows():
-        line = i + 2  # +1 for header, +1 for 0-index -> spreadsheet row number
+    for row_num, (_, row) in enumerate(df.iterrows(), start=2):
+        line = row_num  # 1-based spreadsheet row (header = 1, first data row = 2)
         raw_type = str(row.get("type", "")).strip().lower()
         qtype = _TYPE_ALIASES.get(raw_type)
         if not qtype:
