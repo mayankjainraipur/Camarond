@@ -417,7 +417,9 @@ function Live({
           </div>
         </div>
 
-        {question && !done && <NowOnAir question={question} />}
+        {question && !done && (
+          <NowOnAir question={question} correctAnswer={monitor?.correctAnswer ?? null} />
+        )}
 
         <div className="host-card">
           <h2>{done ? "🏆 Final standings" : "Live standings"}</h2>
@@ -438,7 +440,13 @@ function Live({
   );
 }
 
-function NowOnAir({ question }: { question: QuestionShow }) {
+function NowOnAir({
+  question,
+  correctAnswer,
+}: {
+  question: QuestionShow;
+  correctAnswer: string | null;
+}) {
   const deadline = useMemo(
     () => question.startedAt * 1000 + question.timeLimit * 1000,
     [question]
@@ -457,6 +465,8 @@ function NowOnAir({ question }: { question: QuestionShow }) {
 
   const pct = Math.max(0, Math.min(100, (remaining / question.timeLimit) * 100));
   const tags = ["A", "B", "C", "D", "E", "F"];
+  const norm = (s: string) => s.trim().toLowerCase();
+  const isCorrect = (o: string) => correctAnswer != null && norm(o) === norm(correctAnswer);
 
   return (
     <div className="host-card">
@@ -471,11 +481,18 @@ function NowOnAir({ question }: { question: QuestionShow }) {
       {question.options && question.options.length > 0 && (
         <div className="host-opts">
           {question.options.map((o, i) => (
-            <div key={o} className="host-opt">
+            <div key={o} className={`host-opt ${isCorrect(o) ? "correct" : ""}`}>
               <span className="tag">{tags[i] ?? "•"}</span>
               {o}
+              {isCorrect(o) && <span className="host-opt-check">✓</span>}
             </div>
           ))}
+        </div>
+      )}
+      {correctAnswer != null && correctAnswer !== "" && (
+        <div className="host-answer">
+          <span className="host-answer-label">Correct answer</span>
+          <span className="host-answer-val">{correctAnswer}</span>
         </div>
       )}
     </div>

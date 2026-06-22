@@ -60,6 +60,8 @@ export interface MonitorState {
   total: number;
   participantCount: number;
   answeredCount: number;
+  // host-only: the correct answer for the current question (never sent to players).
+  correctAnswer?: string | null;
 }
 
 export interface EventComplete {

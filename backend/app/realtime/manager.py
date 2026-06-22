@@ -157,6 +157,9 @@ class GameSession:
         ]
 
     def monitor_state(self) -> dict:
+        # host-only channel — safe to include the correct answer here so the
+        # host can see it under the live question (never sent to participants).
+        q = self.current_question()
         return {
             "eventId": self.event_id,
             "state": self.state,
@@ -164,6 +167,7 @@ class GameSession:
             "total": self.total,
             "participantCount": len(self.participants),
             "answeredCount": self.answered_count(),
+            "correctAnswer": q.get("correct_answer") if q else None,
         }
 
 
