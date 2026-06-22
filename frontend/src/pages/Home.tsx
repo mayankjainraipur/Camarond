@@ -6,11 +6,22 @@ export default function Home() {
   const [code, setCode] = useState("");
   const nav = useNavigate();
 
+  const ready = code.length >= 4;
+  const join = () => ready && nav(`/play?code=${code}`);
+
   return (
     <div className="wrap">
+      <div className="brand">
+        <div className="mark">C</div>
+        <div>
+          <b>Camarond</b>
+          <span>Live Quiz</span>
+        </div>
+      </div>
+
       <div className="card center">
-        <h1>Camarond</h1>
-        <p className="muted">Live event gaming — join a quiz or host your own.</p>
+        <h1>Quiz night, live.</h1>
+        <p className="muted">Got a code from the host? Drop it in and you're on the board.</p>
       </div>
 
       <div className="card">
@@ -19,24 +30,31 @@ export default function Home() {
         <input
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          placeholder="ABC123"
+          onKeyDown={(e) => e.key === "Enter" && join()}
+          placeholder="7K2Q9X"
           maxLength={6}
+          autoFocus
+          style={{
+            fontFamily: "var(--mono)",
+            fontSize: "1.4rem",
+            letterSpacing: "6px",
+            textAlign: "center",
+            fontWeight: 800,
+          }}
         />
-        <div style={{ height: 12 }} />
-        <button
-          className="block"
-          disabled={code.length < 4}
-          onClick={() => nav(`/play?code=${code}`)}
-        >
-          Join
+        <div className="spacer-12" />
+        <button className="block" disabled={!ready} onClick={join}>
+          Join event
         </button>
       </div>
 
       <div className="card">
         <h2>Host an event</h2>
-        <p className="muted">Upload a question bank, configure rules, and run it live.</p>
-        <button className="ghost" onClick={() => nav("/host")}>
-          Open host console
+        <p className="muted" style={{ margin: "0 0 16px" }}>
+          Upload a question bank, set the clock, and run the room live.
+        </p>
+        <button className="ghost block" onClick={() => nav("/host")}>
+          Open host console →
         </button>
       </div>
     </div>

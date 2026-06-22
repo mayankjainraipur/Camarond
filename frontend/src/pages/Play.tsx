@@ -11,6 +11,18 @@ import {
 
 type Screen = "join" | "lobby" | "question" | "locked" | "leaderboard" | "results";
 
+function Brand() {
+  return (
+    <div className="brand">
+      <div className="mark">C</div>
+      <div>
+        <b>Camarond</b>
+        <span>Live Quiz</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Play() {
   const [params] = useSearchParams();
   const code = (params.get("code") || "").toUpperCase();
@@ -26,13 +38,19 @@ export default function Play() {
 
   useEffect(() => {
     const s = getSocket();
-    const onQuestion = (d: QuestionShow) => { setQuestion(d); setScreen("question"); };
+    const onQuestion = (d: QuestionShow) => {
+      setQuestion(d);
+      setScreen("question");
+    };
     const onLock = () => setScreen((cur) => (cur === "question" ? "locked" : cur));
     const onBoard = (d: { entries: LeaderboardEntry[] }) => {
       setBoard(d.entries);
       setScreen((cur) => (cur === "results" ? cur : "leaderboard"));
     };
-    const onComplete = (d: EventComplete) => { setResult(d); setScreen("results"); };
+    const onComplete = (d: EventComplete) => {
+      setResult(d);
+      setScreen("results");
+    };
 
     s.on(S2C.QUESTION_SHOW, onQuestion);
     s.on(S2C.QUESTION_LOCK, onLock);
@@ -50,26 +68,40 @@ export default function Play() {
     setError("");
     const res = await emitAck<any>(C2S.PARTICIPANT_JOIN, { code, displayName: name });
     if (!res?.ok) {
-      if (res?.error === "invalid_code") setError("Invalid event code.");
-      else if (res?.error === "event_ended") setError("This event has already ended.");
-      else setError("Could not join.");
+      if (res?.error === "invalid_code") setError("We couldn't find that code. Check it with your host.");
+      else if (res?.error === "event_ended") setError("This event has already wrapped up.");
+      else setError("Couldn't join right now. Try again in a moment.");
       return;
     }
     setEventName(res.eventName);
-    if (res.currentQuestion) { setQuestion(res.currentQuestion); setScreen("question"); }
-    else setScreen("lobby");
+    if (res.currentQuestion) {
+      setQuestion(res.currentQuestion);
+      setScreen("question");
+    } else setScreen("lobby");
   }
 
   if (screen === "join") {
     return (
       <div className="wrap">
+        <Brand />
         <div className="card">
-          <h1>Join event</h1>
-          <p className="muted">Code: <b>{code || "—"}</b></p>
+          <h2>Join the event</h2>
+          <p className="muted" style={{ margin: "0 0 4px" }}>
+            Event code: <b style={{ color: "var(--ink)", fontFamily: "var(--mono)", letterSpacing: "2px" }}>{code || "—"}</b>
+          </p>
           <label>Your display name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Alex" maxLength={40} />
-          <div style={{ height: 12 }} />
-          <button className="block" disabled={!name.trim() || !code} onClick={join}>Join</button>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && name.trim() && code && join()}
+            placeholder="What should we call you?"
+            maxLength={40}
+            autoFocus
+          />
+          <div className="spacer-12" />
+          <button className="block" disabled={!name.trim() || !code} onClick={join}>
+            Join event
+          </button>
           {error && <div className="error">{error}</div>}
         </div>
       </div>
@@ -79,10 +111,16 @@ export default function Play() {
   if (screen === "lobby") {
     return (
       <div className="wrap">
+        <Brand />
         <div className="card center">
           <h1>{eventName}</h1>
-          <p className="big">⏳</p>
-          <p className="muted">You're in! Waiting for the host to start…</p>
+          <div style={{ height: 16 }} />
+          <span className="tally go">
+            <span className="dot" /> You're in
+          </span>
+          <p className="muted" style={{ marginTop: 18 }}>
+            Sit tight — the host will start the quiz any second now.
+          </p>
         </div>
       </div>
     );
@@ -95,25 +133,32 @@ export default function Play() {
   if (screen === "leaderboard") {
     return (
       <div className="wrap">
+        <Brand />
         <div className="card">
-          <h1>Leaderboard</h1>
-          <BoardTable entries={board} />
-          <p className="muted center">Waiting for the next question…</p>
+          <h2>Standings</h2>
+          <Board entries={board} />
+          <p className="muted center" style={{ marginTop: 14 }}>
+            Next question coming up…
+          </p>
         </div>
       </div>
     );
   }
 
   // results
+  const winner = result?.winner;
   return (
     <div className="wrap">
+      <Brand />
       <div className="card center">
-        <h1>🏆 Results</h1>
-        {result?.winner && <p className="big">{result.winner.name}</p>}
-        <p className="muted">wins!</p>
+        <h2 className="plain" style={{ justifyContent: "center" }}>Final result</h2>
+        <p style={{ fontSize: "2.6rem", margin: "4px 0" }}>🏆</p>
+        {winner && <p className="big" style={{ color: "var(--gold)" }}>{winner.name}</p>}
+        <p className="muted">takes the crown</p>
       </div>
       <div className="card">
-        <BoardTable entries={result?.leaderboard ?? board} />
+        <h2>Final standings</h2>
+        <Board entries={result?.leaderboard ?? board} />
       </div>
     </div>
   );
@@ -122,7 +167,8 @@ export default function Play() {
 function QuestionView({ question, locked }: { question: QuestionShow; locked: boolean }) {
   const [answer, setAnswer] = useState<string>("");
   const [submitted, setSubmitted] = useState(false);
-  const [feedback, setFeedback] = useState<string>("");
+  const [feedback, setFeedback] = useState<{ correct: boolean; points?: number } | null>(null);
+  const [failed, setFailed] = useState("");
 
   // Countdown derived from the server's startedAt + timeLimit.
   const deadline = useMemo(
@@ -135,54 +181,69 @@ function QuestionView({ question, locked }: { question: QuestionShow; locked: bo
   useEffect(() => {
     setAnswer("");
     setSubmitted(false);
-    setFeedback("");
+    setFeedback(null);
+    setFailed("");
     const update = () => setRemaining(Math.max(0, Math.round((deadline - Date.now()) / 1000)));
     update();
     tick.current = window.setInterval(update, 250);
-    return () => { if (tick.current) window.clearInterval(tick.current); };
+    return () => {
+      if (tick.current) window.clearInterval(tick.current);
+    };
   }, [question.questionId, deadline]);
 
   async function submit(value: string) {
     if (submitted || locked) return;
     setAnswer(value);
     setSubmitted(true);
+    setFailed("");
     const res = await emitAck<any>(C2S.PARTICIPANT_ANSWER, {
       questionId: question.questionId,
       answer: value,
     });
-    if (res?.accepted) setFeedback(res.correct ? `✅ +${res.points}` : "❌");
-    else { setSubmitted(false); setFeedback("Could not submit"); }
+    if (res?.accepted) setFeedback({ correct: res.correct, points: res.points });
+    else {
+      setSubmitted(false);
+      setFailed("That didn't go through — try once more.");
+    }
   }
 
   const pct = (remaining / question.timeLimit) * 100;
   const disabled = submitted || locked || remaining <= 0;
+  const tags = ["A", "B", "C", "D", "E", "F"];
 
   return (
     <div className="wrap">
+      <Brand />
       <div className="card">
-        <p className="muted">Question {question.index + 1} / {question.total}</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span className="qcount">Question {question.index + 1} / {question.total}</span>
+          <span className="qcount" style={{ color: remaining <= 5 ? "var(--signal)" : "var(--gold)", fontWeight: 700 }}>
+            {remaining}s
+          </span>
+        </div>
         <div className="timer"><div style={{ width: `${pct}%` }} /></div>
-        <p className="muted center">{remaining}s</p>
-        <h1>{question.content}</h1>
+        <p className="qtext">{question.content}</p>
 
-        {question.type === "mcq" && question.options?.map((o) => (
+        {question.type === "mcq" && question.options?.map((o, i) => (
           <button
             key={o}
             className={`option ${answer === o ? "selected" : ""}`}
             disabled={disabled}
             onClick={() => submit(o)}
           >
+            <span className="tag">{tags[i] ?? "•"}</span>
             {o}
           </button>
         ))}
 
-        {question.type === "true_false" && ["True", "False"].map((o) => (
+        {question.type === "true_false" && ["True", "False"].map((o, i) => (
           <button
             key={o}
             className={`option ${answer === o ? "selected" : ""}`}
             disabled={disabled}
             onClick={() => submit(o)}
           >
+            <span className="tag">{tags[i]}</span>
             {o}
           </button>
         ))}
@@ -196,9 +257,14 @@ function QuestionView({ question, locked }: { question: QuestionShow; locked: bo
           />
         )}
 
-        {feedback && <p className="big center">{feedback}</p>}
-        {locked && !feedback && <p className="muted center">⏱ Time! Answers locked.</p>}
-        {submitted && !locked && !feedback && <p className="muted center">Answer sent…</p>}
+        {feedback && (
+          <p className={`center ${feedback.correct ? "feedback-good" : "feedback-bad"}`} style={{ marginTop: 18 }}>
+            {feedback.correct ? `✓ +${feedback.points}` : "✗ Not this time"}
+          </p>
+        )}
+        {locked && !feedback && <p className="muted center" style={{ marginTop: 16 }}>⏱ Time! Answers are locked.</p>}
+        {submitted && !locked && !feedback && !failed && <p className="muted center" style={{ marginTop: 16 }}>Answer locked in…</p>}
+        {failed && <div className="error center">{failed}</div>}
       </div>
     </div>
   );
@@ -221,25 +287,31 @@ function FreeInput({
         value={val}
         disabled={disabled}
         onChange={(e) => setVal(e.target.value)}
-        placeholder="Your answer"
+        onKeyDown={(e) => e.key === "Enter" && !disabled && val.trim() && onSubmit(val)}
+        placeholder="Type your answer"
+        autoFocus
       />
-      <div style={{ height: 10 }} />
+      <div className="spacer-12" />
       <button className="block" disabled={disabled || !val.trim()} onClick={() => onSubmit(val)}>
-        Submit
+        Submit answer
       </button>
     </div>
   );
 }
 
-function BoardTable({ entries }: { entries: LeaderboardEntry[] }) {
+function Board({ entries }: { entries: LeaderboardEntry[] }) {
+  if (entries.length === 0) {
+    return <p className="muted">Scores will show up after the first question.</p>;
+  }
   return (
-    <table>
-      <thead><tr><th>#</th><th>Name</th><th>Score</th></tr></thead>
-      <tbody>
-        {entries.map((e) => (
-          <tr key={e.name}><td className="rank">{e.rank}</td><td>{e.name}</td><td>{e.score}</td></tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      {entries.map((e) => (
+        <div key={e.name} className={`lb-row ${e.rank === 1 ? "top1" : ""}`}>
+          <span className="rank">{e.rank}</span>
+          <span className="nm">{e.name}</span>
+          <span className="sc">{e.score.toLocaleString()}</span>
+        </div>
+      ))}
+    </div>
   );
 }
