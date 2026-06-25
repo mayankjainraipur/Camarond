@@ -1,0 +1,51 @@
+type,content,correct_answer,options,category,difficulty
+mcq,What is the capital of Japan?,Tokyo,Tokyo|Seoul|Bangkok|Beijing,Geography,2
+mcq,Which language runs FastAPI?,Python,Python|Java|Go|Ruby,Technology,3
+mcq,Which planet is known as the Red Planet?,Mars,Mars|Venus|Jupiter|Saturn,Science,1
+mcq,Who founded Microsoft?,Bill Gates,Bill Gates|Steve Jobs|Larry Page|Elon Musk,Technology,2
+mcq,How many continents are there on Earth?,7,5|6|7|8,Geography,1
+mcq,Which company owns Instagram?,Meta,Google|Meta|Microsoft|Amazon,Technology,2
+mcq,What is the largest ocean on Earth?,Pacific Ocean,Atlantic Ocean|Indian Ocean|Pacific Ocean|Arctic Ocean,Geography,2
+mcq,What does CPU stand for?,Central Processing Unit,Central Processing Unit|Computer Power Unit|Central Program Unit|Core Processing Utility,Technology,3
+mcq,Which country gifted the Statue of Liberty to the USA?,France,Germany|France|Canada|Italy,History,3
+mcq,What is the boiling point of water at sea level?,100°C,90°C|95°C|100°C|110°C,Science,1
+mcq,Which company developed the iPhone?,Apple,Apple|Samsung|Nokia|Sony,Technology,1
+mcq,Who wrote Harry Potter?,J.K. Rowling,J.K. Rowling|Stephen King|George Orwell|J.R.R. Tolkien,Books,2
+mcq,Which is the smallest prime number?,2,1|2|3|5,Math,1
+mcq,What is the currency of Japan?,Yen,Yuan|Won|Yen|Dollar,Geography,2
+mcq,Which social media platform is known for short videos?,TikTok,LinkedIn|Reddit|TikTok|Pinterest,Technology,1
+mcq,How many players are there in a football team on the field?,11,9|10|11|12,Sports,1
+mcq,Who painted the Mona Lisa?,Leonardo da Vinci,Picasso|Van Gogh|Leonardo da Vinci|Michelangelo,Art,3
+mcq,What is H2O commonly known as?,Water,Hydrogen|Oxygen|Water|Salt,Science,1
+mcq,Which company created Windows?,Microsoft,Apple|Google|Microsoft|IBM,Technology,1
+mcq,What is the tallest mountain in the world?,Mount Everest,K2|Mount Everest|Kangchenjunga|Makalu,Geography,2
+mcq,Which gas do plants absorb from the atmosphere?,Carbon Dioxide,Oxygen|Nitrogen|Carbon Dioxide|Hydrogen,Science,2
+mcq,Who is known as the Father of Computers?,Charles Babbage,Alan Turing|Charles Babbage|Bill Gates|John von Neumann,Technology,3
+mcq,Which country hosted the 2016 Olympics?,Brazil,China|Brazil|UK|Japan,Sports,2
+mcq,What is the square root of 144?,12,10|11|12|13,Math,1
+mcq,Which programming language is primarily used for Android development today?,Kotlin,Swift|Kotlin|Ruby|PHP,Technology,3
+mcq,What is the largest mammal?,Blue Whale,Elephant|Blue Whale|Giraffe|Hippopotamus,Science,2
+mcq,Which company owns YouTube?,Google,Meta|Google|Amazon|Netflix,Technology,1
+mcq,How many colors are there in a rainbow?,7,5|6|7|8,Science,1
+mcq,Who was the first person on the Moon?,Neil Armstrong,Buzz Aldrin|Yuri Gagarin|Neil Armstrong|Michael Collins,History,2
+mcq,Which sport uses a shuttlecock?,Badminton,Tennis|Cricket|Badminton|Squash,Sports,1
+mcq,Which continent is the Sahara Desert located in?,Africa,Africa|Asia|Australia|South America,Geography,2
+mcq,What does URL stand for?,Uniform Resource Locator,Universal Resource Link|Uniform Resource Locator|Unique Reference Locator|Universal Routing Link,Technology,3
+mcq,Which animal is known as the King of the Jungle?,Lion,Tiger|Lion|Elephant|Leopard,Science,1
+mcq,Which company is famous for the AWS cloud platform?,Amazon,Google|Amazon|Microsoft|Oracle,Technology,3
+mcq,How many sides does a hexagon have?,6,5|6|7|8,Math,1
+mcq,Which country is known as the Land of the Rising Sun?,Japan,China|Thailand|Japan|Vietnam,Geography,2
+mcq,Who directed Titanic?,James Cameron,Steven Spielberg|Christopher Nolan|James Cameron|Ridley Scott,Movies,2
+mcq,What is the hardest natural substance?,Diamond,Gold|Iron|Diamond|Quartz,Science,2
+mcq,Which company created ChatGPT?,OpenAI,Google|Meta|OpenAI|Microsoft,Technology,2
+mcq,Which Indian city is known as the Silicon Valley of India?,Bengaluru,Hyderabad|Mumbai|Bengaluru|Pune,India,2
+mcq,How many minutes are there in an hour?,60,50|55|60|65,General,1
+mcq,What does AI stand for?,Artificial Intelligence,Automated Information|Artificial Intelligence|Advanced Internet|Applied Intelligence,Technology,2
+mcq,Which country won the Cricket World Cup in 2011?,India,Australia|England|India|Sri Lanka,Sports,3
+mcq,What is the capital of Australia?,Canberra,Sydney|Melbourne|Canberra|Perth,Geography,3
+mcq,Which blood type is known as the universal donor?,O Negative,A Positive|AB Positive|O Negative|B Negative,Science,4
+mcq,Which company developed the React framework?,Meta,Google|Meta|Microsoft|Netflix,Technology,3
+mcq,Which element has the chemical symbol Au?,Gold,Silver|Gold|Copper|Aluminum,Science,2
+mcq,How many days are there in a leap year?,366,364|365|366|367,General,1
+mcq,Which movie features the character Jack Sparrow?,Pirates of the Caribbean,Avatar|Titanic|Pirates of the Caribbean|Gladiator,Movies,1
+mcq,Which planet is the largest in our solar system?,Jupiter,Earth|Saturn|Jupiter|Neptune,Science,2

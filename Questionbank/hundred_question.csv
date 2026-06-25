@@ -1,0 +1,94 @@
+type,content,correct_answer,options,category,difficulty
+mcq,What does HTTP stand for?,HyperText Transfer Protocol,HyperText Transfer Protocol|High Transfer Text Protocol|Hyper Terminal Transfer Process|Host Transfer Protocol,Web,2
+mcq,What is the default port for HTTPS?,443,80|443|22|8080,Networking,2
+mcq,Which company created Kubernetes?,Google,Google|Amazon|Microsoft|IBM,Cloud,3
+mcq,Which Git command creates a copy of a remote repository locally?,git clone,git pull|git fork|git clone|git fetch,Git,2
+mcq,What does CPU stand for?,Central Processing Unit|Central Processing Unit|Computer Processing Utility|Core Process Unit|Central Program Utility,Computer Science,2
+mcq,Which programming language is primarily associated with Django?,Python,Python|Java|Ruby|Go,Programming,2
+mcq,What is the binary representation of decimal 10?,1010,1001|1010|1100|1110,Computer Science,3
+mcq,Which SQL statement retrieves data from a table?,SELECT,GET|FETCH|SELECT|READ,Databases,2
+mcq,What is the purpose of DNS?,Resolve domain names to IP addresses,Encrypt traffic|Resolve domain names to IP addresses|Store web pages|Route packets,Networking,3
+mcq,Which Linux command lists files in a directory?,ls,list|ls|dir|show,Linux,1
+mcq,What does API stand for?,Application Programming Interface,Application Process Integration|Application Programming Interface|Automated Program Interface|Advanced Programming Interface,Programming,2
+mcq,Which data structure follows FIFO order?,Queue,Stack|Queue|Tree|Heap,Algorithms,3
+mcq,What is the time complexity of binary search?,O(log n),O(n)|O(log n)|O(n²)|O(1),Algorithms,4
+mcq,Which HTTP method is generally used to create a resource?,POST,GET|POST|PUT|DELETE,Web,3
+mcq,What is the default branch name used by modern Git repositories?,main,master|default|main|root,Git,3
+mcq,Which AWS service provides virtual machines?,EC2,S3|Lambda|EC2|RDS,Cloud,4
+mcq,What is the primary purpose of a load balancer?,Distribute traffic across servers,Store logs|Distribute traffic across servers|Encrypt traffic|Manage DNS,Architecture,4
+mcq,Which SQL clause filters grouped results?,HAVING,WHERE|HAVING|GROUP BY|ORDER BY,Databases,5
+mcq,What is a container image?,A template used to create containers,A running container|A template used to create containers|A VM snapshot|A cluster node,DevOps,4
+mcq,Which protocol is connection-oriented?,TCP,TCP|UDP|ICMP|ARP,Networking,4
+mcq,What does ACID Atomicity mean?,All-or-nothing transaction,Data persistence|All-or-nothing transaction|Fast execution|Replication,Databases,5
+mcq,Which data structure is used for recursion?,Stack,Queue|Stack|Heap|Trie,Computer Science,4
+mcq,What is the purpose of a CDN?,Reduce latency by serving content closer to users,Encrypt databases|Reduce latency by serving content closer to users|Manage containers|Provide DNS only,Web,5
+mcq,Which sorting algorithm is stable?,Merge Sort,Quick Sort|Heap Sort|Merge Sort|Selection Sort,Algorithms,5
+mcq,What is the maximum value of an unsigned 8-bit integer?,255,127|255|256|511,Computer Science,4
+mcq,Which Kubernetes object maintains a desired number of pods?,Deployment,Service|ConfigMap|Deployment|Ingress,DevOps,5
+mcq,What is normalization in databases primarily used for?,Reducing redundancy,Improving UI|Reducing redundancy|Encrypting data|Increasing storage,Databases,5
+mcq,Which design pattern restricts a class to a single instance?,Singleton,Factory|Observer|Adapter|Singleton,Design Patterns,4
+mcq,What is the purpose of an index in a database?,Speed up queries,Encrypt data|Speed up queries|Normalize tables|Backup data,Databases,4
+mcq,Which HTTP status code means Not Found?,404,200|301|404|500,Web,2
+mcq,What does REST stand for?,Representational State Transfer,Remote State Transfer|Representational State Transfer|Resource State Tracking|Remote Service Transfer,Web,4
+mcq,Which cloud model provides managed application platforms?,PaaS,IaaS|PaaS|SaaS|FaaS,Cloud,5
+mcq,Which algorithm finds the shortest path in a graph with non-negative weights?,Dijkstra,Dijkstra|DFS|BFS|Prim,Algorithms,6
+mcq,What is a race condition?,Outcome depends on timing of execution,Memory leak|Outcome depends on timing of execution|Deadlock|Cache miss,Concurrency,6
+mcq,Which cryptographic algorithm is asymmetric?,RSA,AES|RSA|SHA-256|ChaCha20,Security,5
+mcq,What does idempotent mean in REST APIs?,Repeated requests have the same effect,Request is cached|Request is encrypted|Repeated requests have the same effect|Request is compressed,Web,6
+mcq,Which OSI layer is responsible for routing?,Network Layer,Transport Layer|Network Layer|Session Layer|Data Link Layer,Networking,5
+mcq,Which NoSQL database is document-oriented?,MongoDB,Redis|MongoDB|Neo4j|Cassandra,Databases,5
+mcq,What is sharding?,Horizontal partitioning of data,Encryption|Horizontal partitioning of data|Compression|Indexing,Databases,6
+mcq,Which consensus algorithm is used by etcd?,Raft,Paxos|Raft|Chord|Gossip,Distributed Systems,7
+mcq,What is eventual consistency?,Replicas converge over time,Immediate consistency|Replicas converge over time|Atomic transactions|Guaranteed ordering,Distributed Systems,7
+mcq,Which HTTP method is idempotent but not safe?,PUT,GET|POST|PUT|PATCH,Web,6
+mcq,What is a deadlock?,Processes waiting on each other indefinitely,CPU overload|Memory leak|Processes waiting on each other indefinitely|Thread starvation,Concurrency,6
+mcq,Which database isolation level prevents dirty reads but allows non-repeatable reads?,Read Committed,Read Uncommitted|Read Committed|Repeatable Read|Serializable,Databases,7
+mcq,What is CIDR used for?,IP address allocation and routing,Encryption|Container networking|IP address allocation and routing|Load balancing,Networking,7
+mcq,Which AWS service is serverless compute?,Lambda,ECS|EC2|Lambda|EKS,Cloud,5
+mcq,What is the purpose of etcd in Kubernetes?,Store cluster state,Run containers|Store cluster state|Serve DNS|Schedule pods,DevOps,7
+mcq,Which CAP theorem property trade-off occurs during a partition?,Consistency or Availability must be sacrificed,Durability|Latency|Consistency or Availability must be sacrificed|Atomicity,System Design,7
+mcq,What is write amplification?,Extra writes performed beyond intended data writes,Read caching|Extra writes performed beyond intended data writes|Compression|Packet duplication,Storage,7
+mcq,Which data structure is commonly used to implement an LRU cache?,Hash Map plus Doubly Linked List,Array|Hash Map plus Doubly Linked List|Heap|Trie,Algorithms,7
+mcq,Which SQL join returns rows only when there is a match in both tables?,INNER JOIN,LEFT JOIN|RIGHT JOIN|FULL JOIN|INNER JOIN,Databases,4
+mcq,What is the purpose of a reverse proxy?,Handle requests before backend servers,Store backups|Handle requests before backend servers|Compile code|Encrypt disks,Architecture,5
+mcq,Which algorithm underlies Git object storage integrity?,SHA hashing,SHA hashing|AES|RSA|Diffie-Hellman,Git,6
+mcq,What does the Kubernetes kube-scheduler do?,Assign Pods to Nodes,Run containers|Assign Pods to Nodes|Store cluster state|Expose services,DevOps,7
+mcq,What is the complexity of inserting into a binary heap?,O(log n),O(1)|O(log n)|O(n)|O(n log n),Algorithms,6
+mcq,What is a phantom read?,A query returns different row sets within a transaction,Reading uncommitted data|Lost update|A query returns different row sets within a transaction|Corrupted page,Databases,8
+mcq,Which TCP flag is primarily used to initiate a connection?,SYN,SYN|ACK|FIN|RST,Networking,6
+mcq,What is the primary benefit of immutable infrastructure?,Consistency and reproducibility,Lower CPU usage|Consistency and reproducibility|Faster networks|Automatic scaling,DevOps,7
+mcq,Which storage engine uses LSM Trees extensively?,RocksDB,InnoDB|PostgreSQL Heap|RocksDB|MyISAM,Databases,8
+mcq,What problem does consistent hashing help solve?,Reducing redistribution when nodes change,Encryption|Deadlocks|Reducing redistribution when nodes change|Data compression,Distributed Systems,8
+mcq,What is the purpose of vector clocks?,Track causality in distributed systems,Encrypt messages|Track causality in distributed systems|Allocate memory|Optimize queries,Distributed Systems,8
+mcq,Which garbage collector strategy minimizes pause times through concurrent work?,Concurrent Mark Sweep,Reference Counting|Concurrent Mark Sweep|Stop-the-world only|Copy-on-write,Runtime,8
+mcq,What is split-brain in distributed systems?,Multiple nodes believe they are the leader,Slow replication|Packet loss|Multiple nodes believe they are the leader|Disk failure,Distributed Systems,8
+mcq,Which database anomaly can occur under Snapshot Isolation?,Write Skew,Dirty Read|Lost Update|Write Skew|Torn Write,Databases,9
+mcq,What is the ABA problem in lock-free programming?,A value changes and changes back misleading a compare operation,Thread starvation|Memory leak|A value changes and changes back misleading a compare operation|Cache invalidation,Concurrency,9
+mcq,What is the primary purpose of quorum reads and writes?,Maintain consistency across replicas,Reduce storage|Compress data|Maintain consistency across replicas|Speed up UI rendering,Distributed Systems,8
+mcq,Which Paxos role proposes values?,Proposer,Acceptor|Learner|Coordinator|Proposer,Distributed Systems,8
+mcq,What is tail latency?,Latency experienced by the slowest requests,Average latency|Median latency|Latency experienced by the slowest requests|Network throughput,System Design,7
+mcq,What is a Bloom Filter used for?,Probabilistic membership testing,Sorting|Encryption|Probabilistic membership testing|Compression,Algorithms,8
+mcq,Which database index is best suited for range scans?,B-Tree,Hash Index|Bitmap Index|B-Tree|Bloom Index,Databases,7
+mcq,What is backpressure in distributed systems?,Mechanism to prevent overload by slowing producers,Packet routing|Caching|Mechanism to prevent overload by slowing producers|Data sharding,Distributed Systems,8
+mcq,What does Raft use randomized election timeouts for?,Reduce leader election conflicts,Encrypt traffic|Reduce leader election conflicts|Compress logs|Balance load,Distributed Systems,8
+mcq,Which Linux mechanism isolates process views of system resources?,Namespaces,Signals|Namespaces|Cron|Pipes,Linux,7
+mcq,What is a thundering herd problem?,Many clients wake simultaneously for the same event,Deadlock|Memory leak|Many clients wake simultaneously for the same event|Data corruption,System Design,8
+mcq,What is the purpose of WAL in databases?,Ensure durability through write-ahead logging,Compress data|Ensure durability through write-ahead logging|Manage users|Create indexes,Databases,7
+mcq,Which algorithm is commonly used for leader election in distributed systems?,Raft,Merge Sort|Dijkstra|Raft|KMP,Distributed Systems,7
+mcq,What is cache stampede?,Many requests regenerate the same expired data simultaneously,Slow DNS|Packet loss|Many requests regenerate the same expired data simultaneously|Deadlock,System Design,8
+mcq,What is the primary challenge addressed by two-phase commit?,Distributed transaction coordination,Load balancing|Encryption|Distributed transaction coordination|Query optimization,Distributed Systems,8
+mcq,Which scheduler policy can lead to starvation?,Priority Scheduling,Round Robin|FCFS|Priority Scheduling|Lottery Scheduling,Operating Systems,7
+mcq,What is false sharing?,Independent variables on same cache line causing contention,Shared database locks|Packet collision|Independent variables on same cache line causing contention|Memory leak,Performance,9
+mcq,What does linearizability guarantee?,Operations appear to occur atomically in real-time order,Eventual convergence|No data loss|Operations appear to occur atomically in real-time order|Faster execution,Distributed Systems,9
+mcq,What is a Merkle Tree primarily used for?,Efficient verification of data integrity,Compression|Encryption|Efficient verification of data integrity|Scheduling,Distributed Systems,8
+mcq,What is the main drawback of two-phase locking?,Potential deadlocks,Slow reads only|Potential deadlocks|No consistency|No durability,Databases,8
+mcq,Which isolation level prevents phantom reads?,Serializable,Read Committed|Repeatable Read|Serializable|Snapshot,Databases,8
+mcq,What is the purpose of a sidecar container?,Provide supporting functionality to a main container,Store images|Run hypervisor|Provide supporting functionality to a main container|Schedule nodes,DevOps,7
+mcq,What is a hazard pointer used for?,Safe memory reclamation in lock-free structures,Load balancing|Safe memory reclamation in lock-free structures|Encryption|Caching,Concurrency,9
+mcq,What is the main benefit of CRDTs?,Conflict-free convergence without coordination,Stronger consistency|Faster CPUs|Conflict-free convergence without coordination|Lower memory usage,Distributed Systems,9
+mcq,Which scheduling algorithm minimizes average waiting time theoretically?,Shortest Job First,Round Robin|FCFS|Priority|Shortest Job First,Operating Systems,7
+mcq,What does NUMA stand for?,Non-Uniform Memory Access,Network Unified Memory Architecture|Non-Uniform Memory Access|Node Unified Memory Access|Nonlinear Memory Allocation,Systems,8
+mcq,Which anomaly is specifically prevented by Serializable isolation?,Write Skew,Dirty Read|Non-repeatable Read|Write Skew|Read Committed,Databases,9
+mcq,What is the FLP impossibility result about?,Consensus cannot be guaranteed in an asynchronous system with one faulty process,Hashing limitations|Database normalization|Consensus cannot be guaranteed in an asynchronous system with one faulty process|Memory allocation,Distributed Systems,10
+mcq,What is the key limitation of two-phase commit under coordinator failure?,It can block indefinitely,Data loss is guaranteed|It can block indefinitely|Queries fail permanently|Replication stops,Distributed Systems,10
+mcq,Why is consensus fundamentally difficult in distributed systems?,Uncertainty of communication and failures,Slow CPUs|Lack of storage|Uncertainty of communication and failures|Limited RAM,Distributed Systems,10

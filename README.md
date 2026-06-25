@@ -1,4 +1,4 @@
-# Camarond — Live Event Gaming Platform (MVP)
+# Camarond — Live Event Gaming Platform
 
 A browser-based platform for running **live, real-time quiz events**. A host
 uploads a question bank, configures an event, and shares a link/code;

@@ -1,0 +1,41 @@
+type,content,correct_answer,options,category,difficulty
+mcq,Which HTTP status code indicates a resource was permanently moved?,301,301|302|307|308,Web,4
+mcq,In Git what does HEAD normally point to?,Current commit,Current commit|First commit|Remote repository|Working directory,Git,4
+mcq,Which database index structure is most commonly used by relational databases?,B-Tree,B-Tree|Trie|Linked List|Heap,Databases,5
+mcq,What is the default port for HTTPS?,443,80|443|22|8080,Networking,3
+mcq,Which CAP theorem property must be sacrificed during a network partition?,Either Consistency or Availability,Durability|Scalability|Either Consistency or Availability|Atomicity,System Design,7
+mcq,What does DNS primarily translate?,Domain names to IP addresses,IP addresses to MAC addresses|Domain names to IP addresses|URLs to HTML|Packets to Frames,Networking,4
+mcq,Which AWS service is serverless compute?,Lambda,EC2|ECS|Lambda|EKS,Cloud,4
+mcq,What is the time complexity of binary search?,O(log n),O(n)|O(log n)|O(n log n)|O(1),Algorithms,4
+mcq,Which SQL clause is evaluated before HAVING?,GROUP BY,ORDER BY|GROUP BY|SELECT|LIMIT,Databases,6
+mcq,Which isolation level prevents dirty reads but allows phantom reads?,Read Committed,Read Uncommitted|Read Committed|Serializable|Snapshot,Databases,7
+mcq,What does idempotent mean in REST APIs?,Multiple identical requests have same effect,Request is cached|Request is encrypted|Multiple identical requests have same effect|Request is compressed,Web,5
+mcq,Which protocol establishes encrypted web communication?,TLS,TCP|UDP|TLS|ARP,Security,4
+mcq,Which sorting algorithm has average complexity O(n log n) and is stable?,Merge Sort,Quick Sort|Heap Sort|Merge Sort|Selection Sort,Algorithms,6
+mcq,What is the purpose of Kubernetes etcd?,Cluster state storage,Container runtime|Service mesh|Cluster state storage|Image registry,DevOps,7
+mcq,Which normal form removes transitive dependencies?,3NF,1NF|2NF|3NF|BCNF,Databases,6
+mcq,What is the maximum value represented by an unsigned 8-bit integer?,255,127|255|256|511,Computer Science,4
+mcq,Which design pattern ensures only one instance of a class exists?,Singleton,Factory|Adapter|Observer|Singleton,Design Patterns,4
+mcq,What does CIDR stand for?,Classless Inter-Domain Routing,Central Internet Domain Routing|Classless Inter-Domain Routing|Common Internet Data Routing|Class Internet Distribution Routing,Networking,7
+mcq,Which HTTP method should be idempotent but not necessarily safe?,PUT,GET|POST|PUT|PATCH,Web,6
+mcq,In Docker what is the primary purpose of a container image?,Template for containers,Runtime memory|Template for containers|Network configuration|Persistent volume,DevOps,4
+mcq,Which consensus algorithm is used by etcd?,Raft,Paxos|Raft|Bully|Chord,Distributed Systems,8
+mcq,What is the main advantage of columnar databases for analytics?,Faster aggregations,Faster transactions|Smaller tables|Faster aggregations|Simpler schema,Databases,6
+mcq,Which OSI layer is responsible for routing?,Network Layer,Transport Layer|Network Layer|Session Layer|Data Link Layer,Networking,4
+mcq,What is a race condition?,Outcome depends on timing,Memory leak|Outcome depends on timing|Deadlock|Cache miss,Concurrency,5
+mcq,Which cryptographic algorithm is asymmetric?,RSA,AES|RSA|SHA-256|ChaCha20,Security,5
+mcq,What does eventual consistency guarantee?,Replicas converge over time,Immediate consistency|No data loss|Replicas converge over time|Strong transactions,Distributed Systems,7
+mcq,Which data structure is typically used to implement recursion?,Stack,Queue|Stack|Heap|Graph,Computer Science,3
+mcq,Which Kubernetes object ensures a specified number of pods are running?,Deployment,Service|Ingress|Deployment|ConfigMap,DevOps,5
+mcq,What is the primary purpose of a CDN?,Reduce latency,Encrypt traffic|Store passwords|Reduce latency|Replace DNS,Web,5
+mcq,In Big-O notation which grows fastest?,O(2^n),O(log n)|O(n)|O(n^2)|O(2^n),Algorithms,4
+mcq,Which database operation is most vulnerable to N+1 query problems?,ORM lazy loading,Index creation|Normalization|ORM lazy loading|Replication,Databases,7
+mcq,What does ACID Atomicity mean?,All-or-nothing transaction,Data durability|Read consistency|All-or-nothing transaction|Parallel execution,Databases,5
+mcq,Which Linux command shows active processes?,ps,grep|ps|chmod|tar,Linux,3
+mcq,What is the purpose of a reverse proxy?,Handle requests before backend servers,Store DNS records|Encrypt disks|Handle requests before backend servers|Compile code,Architecture,5
+mcq,Which cloud model provides virtual machines?,IaaS,IaaS|PaaS|SaaS|FaaS,Cloud,4
+mcq,Which algorithm is commonly used for shortest path in weighted graphs without negative edges?,Dijkstra,Dijkstra|DFS|BFS|KMP,Algorithms,6
+mcq,What causes a deadlock?,Circular resource waiting,Low memory|Circular resource waiting|CPU overload|Cache miss,Concurrency,5
+mcq,Which HTTP status code indicates Too Many Requests?,429,401|403|429|503,Web,5
+mcq,Which NoSQL database is document-oriented?,MongoDB,Redis|MongoDB|Cassandra|Neo4j,Databases,4
+mcq,What is the purpose of sharding?,Horizontal partitioning,Data encryption|Horizontal partitioning|Compression|Indexing,Databases,7
