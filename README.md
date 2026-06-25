@@ -91,6 +91,21 @@ Open http://localhost:5173. Vite proxies `/api` and `/socket.io` to the backend.
 5. After the event ends, open **View past results** (`/reports`) for the final
    standings and per-question breakdown.
 
+## Tests
+
+Backend tests (pytest) run against a throwaway SQLite DB, so they never touch
+`camarond.db`:
+
+```bash
+cd backend
+pip install -r requirements-dev.txt   # pytest, pytest-asyncio, httpx
+pytest
+```
+
+They cover the scoring and parser units, `GameSession` logic (incl. team
+balancing), the REST API, the reports endpoints, and a full Socket.IO game
+loop end-to-end.
+
 ## Going live over the internet (ngrok)
 
 The frontend talks to the backend same-origin (Vite proxy), so expose the

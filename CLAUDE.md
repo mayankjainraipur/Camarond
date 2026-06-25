@@ -53,6 +53,16 @@ npm run dev
 API docs: http://localhost:8000/docs  
 UI: http://localhost:5173
 
+## Tests
+
+```bash
+cd backend
+pip install -r requirements-dev.txt   # pytest, pytest-asyncio, httpx
+pytest
+```
+
+Tests live in `backend/tests/` and run against a temp SQLite DB (never `camarond.db`). `conftest.py` provides the temp-DB, `TestClient`, seeded-bank, and background-uvicorn `live_server` fixtures. Coverage: scoring/parser units, `GameSession` (incl. team logic), REST API, reports endpoints, and a real Socket.IO game-loop E2E. No frontend test setup yet.
+
 ## Development conventions
 
 - **Socket.IO contract:** any new event must be added to both `events.py` and `contracts.ts` together. Team mode adds fields to existing payloads (no new event names).
