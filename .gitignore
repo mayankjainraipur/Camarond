@@ -11,6 +11,11 @@ node_modules/
 dist/
 *.local
 
+# Build artifacts
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
 # Editor / OS
 .vscode/
 .idea/
