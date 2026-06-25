@@ -5,8 +5,9 @@ uploads a question bank, configures an event, and shares a link/code;
 participants join from any browser and compete in real time with a live
 leaderboard.
 
-This is the MVP scaffold described in the PRD — Quiz events, ≤50 concurrent
-participants, local hosting via ngrok.
+It supports four question types, optional auto-balanced teams, speed-bonus
+scoring, a live leaderboard, and a post-event reports dashboard — for up to ~50
+concurrent participants, hosted locally and shared over ngrok.
 
 ## Tech stack
 
@@ -33,22 +34,25 @@ backend/
     main.py            # FastAPI + Socket.IO ASGI app
     config.py          # env-driven settings
     database.py        # SQLAlchemy engine/session
-    models.py          # QuestionBank, Question, Event
-    schemas.py         # Pydantic request/response models
-    api/               # REST: banks (upload/preview), events (create/lookup)
+    models.py          # QuestionBank, Question, Event, ParticipantResult, QuestionResponse
+    schemas.py         # Pydantic request/response models (incl. reports)
+    api/               # REST: banks (upload/preview), events (create/lookup), reports
+      reports.py       # post-event analytics over persisted results
     realtime/
       events.py        # Socket.IO event-name contract (mirror of frontend)
-      manager.py       # in-memory GameSession + scoring orchestration
-      server.py        # Socket.IO handlers (the game loop)
+      manager.py       # in-memory GameSession, scoring, team assignment, answer capture
+      server.py        # Socket.IO handlers (the game loop); _complete persists results
     services/
       parser.py        # XLSX/CSV -> normalized questions
       scoring.py       # answer checking + point/speed-bonus rules
 frontend/
   src/
-    pages/             # Home, Host (console), Play (participant)
+    pages/             # Home, Host (console), Play (participant), Reports (dashboard)
+    components/        # Board (leaderboard), PasswordGate (shared)
     lib/               # socket.ts, api.ts
     types/contracts.ts # Socket.IO contract (mirror of backend events.py)
-sample_questions.csv   # ready-to-upload test bank
+Questionbank/
+  sample_questions.csv # ready-to-upload test bank
 ```
 
 ## Run it locally
@@ -79,10 +83,13 @@ Open http://localhost:5173. Vite proxies `/api` and `/socket.io` to the backend.
 
 ### 3. Try it
 
-1. Go to **Host console** → upload `sample_questions.csv` → create event.
+1. Go to **Host console** → upload `Questionbank/sample_questions.csv` → create event
+   (optionally enable **Team mode** and set a team count).
 2. Copy the join link / 6-char code.
 3. Open the link in another browser/phone, enter a name, join.
 4. Back in the host console: **Start event**, then **Next question**.
+5. After the event ends, open **View past results** (`/reports`) for the final
+   standings and per-question breakdown.
 
 ## Going live over the internet (ngrok)
 
@@ -95,7 +102,7 @@ ngrok http 5173
 
 Share the `https://<id>.ngrok-free.app/play?code=XXXXXX` URL with participants.
 (For production you'd build the frontend and serve it behind one host with the
-API; ngrok on the dev server is the MVP path from the PRD.)
+API.)
 
 ## Question bank format
 
@@ -110,15 +117,33 @@ CSV or XLSX with these columns (case-insensitive):
 | `category`       | no       | defaults to "General Knowledge"                  |
 | `difficulty`     | no       | integer 1–10, defaults to 1                      |
 
-## What's implemented vs. stubbed
+## Features
 
-**Working end-to-end:** upload/validate banks, create events with
-category+difficulty filters, join via code, lobby, server-timed questions, all
-4 question types, speed-bonus scoring, live leaderboard, host controls
-(start/next/pause/resume/end), final results.
+- **Question banks** — upload and validate CSV/XLSX banks, reuse them across
+  events, and filter questions by category and difficulty.
+- **Event configuration** — per-question time limit, base points, speed bonus,
+  leaderboard cadence, and manual/auto advance.
+- **Four question types** — multiple choice, true/false, text, and number.
+- **Real-time gameplay** — join via 6-char code, lobby, server-timed questions,
+  live leaderboard, and host controls (start / next / pause / resume / end).
+- **Auto-balanced teams** (optional) — the host sets a team count; joiners are
+  spread evenly across teams; a team's score is the sum of its members';
+  standings show teams alongside individuals.
+- **Persisted results** — every completed event is saved (final standings and
+  per-answer records).
+- **Reports dashboard** (`/reports`, password-gated) — past events with final /
+  team standings, per-question correct-rate, average time-to-answer, and answer
+  distribution.
 
-**Intentionally minimal for MVP (extend as needed):** auth (none — by design
-per PRD), reconnection/resume mid-game, bank category/difficulty pickers in the
-create-event UI (the API already supports them), persistence of per-participant
-results to the DB (only final event status is persisted).
+### Notes & limitations
+
+- **Auth:** a single shared host password gates the host console and reports
+  (client-side gate, no per-user accounts) — by design per the PRD.
+- **In-memory game loop:** live state is held in memory and results are written
+  to the DB only at event completion, so a server restart mid-event loses the
+  in-progress game.
+- **Single instance / SQLite:** sized for ~50 participants on one process.
+  Reconnection/resume mid-game, category/difficulty pickers in the create-event
+  UI (the API already supports them), multi-instance scaling, and cloud
+  deployment are not included.
 ```
