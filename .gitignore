@@ -16,6 +16,9 @@ dist/
 frontend/vite.config.js
 frontend/vite.config.d.ts
 
+# Test
+.pytest_cache/
+
 # Editor / OS
 .vscode/
 .idea/
