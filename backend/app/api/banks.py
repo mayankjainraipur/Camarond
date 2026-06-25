@@ -56,6 +56,7 @@ async def upload_bank(
             options=q["options"],
             category=q["category"],
             difficulty=q["difficulty"],
+            hint=q.get("hint"),
         )
         for q in questions
     )

@@ -83,13 +83,14 @@ Open http://localhost:5173. Vite proxies `/api` and `/socket.io` to the backend.
 
 ### 3. Try it
 
-1. Go to **Host console** → upload `Questionbank/sample_questions.csv` → create event
-   (optionally enable **Team mode** and set a team count).
-2. Copy the join link / 6-char code.
-3. Open the link in another browser/phone, enter a name, join.
-4. Back in the host console: **Start event**, then **Next question**.
-5. After the event ends, open **View past results** (`/reports`) for the final
-   standings and per-question breakdown.
+1. Open **`/host`** → **Question Banks** → upload `Questionbank/sample_questions.csv`.
+2. Go to **Events** → pick an event type (Quiz/Puzzle/Poll/Treasure Hunt),
+   choose the bank (optionally enable **Team mode**) → **Create & go live**.
+3. On **Live Control**, copy the join link / 6-char code.
+4. Open the link in another browser/phone, enter a name, join.
+5. Back on Live Control: **Start event**, then **Next question** (or **Next clue**).
+6. After the event ends, open **Reports** (`/host/reports`) for the final
+   standings / poll results and per-question breakdown.
 
 ## Tests
 
@@ -121,16 +122,38 @@ API.)
 
 ## Question bank format
 
-CSV or XLSX with these columns (case-insensitive):
+CSV or XLSX with these columns (case-insensitive, order-independent):
 
-| column           | required | notes                                            |
-|------------------|----------|--------------------------------------------------|
-| `type`           | yes      | `mcq` \| `text` \| `number` \| `true_false`      |
-| `content`        | yes      | the question text                                |
-| `correct_answer` | yes      | for `mcq`, must match one of the options         |
-| `options`        | mcq only | pipe-separated: `Tokyo\|Seoul\|Beijing\|Osaka`   |
-| `category`       | no       | defaults to "General Knowledge"                  |
-| `difficulty`     | no       | integer 1–10, defaults to 1                      |
+| column           | required        | notes                                              |
+|------------------|-----------------|----------------------------------------------------|
+| `type`           | yes             | `mcq` \| `text` \| `number` \| `true_false` \| `poll` |
+| `content`        | yes             | the question text                                  |
+| `correct_answer` | yes (not poll)  | for `mcq`, must match one of the options; blank for `poll` |
+| `options`        | mcq & poll      | pipe-separated: `Tokyo\|Seoul\|Beijing\|Osaka`     |
+| `category`       | no              | defaults to "General Knowledge"                    |
+| `difficulty`     | no              | integer 1–10, defaults to 1                        |
+| `hint`           | no              | clue revealed in-game (puzzle / treasure hunt)     |
+
+### Bank formats by event type
+
+A bank is just content — the **event type** (chosen when you create the event)
+decides how it's scored and shown. Use the right `type` values for the event
+you intend to run:
+
+| Event type     | `type` values             | `correct_answer` | `options` | `hint`   | Example row |
+|----------------|---------------------------|------------------|-----------|----------|-------------|
+| **Quiz**       | `mcq`/`text`/`number`/`true_false` | required | mcq only  | —        | `mcq,Capital of Japan?,Tokyo,Tokyo\|Seoul\|Bangkok\|Beijing,Geography,2,` |
+| **Puzzle**     | `text`/`number`/`mcq`     | required         | mcq only  | optional | `text,I speak without a mouth?,echo,,Riddles,6,You repeat after others` |
+| **Poll**       | `poll`                    | **blank**        | required  | —        | `poll,Best language?,,Python\|Go\|Rust\|JS,Tech,1,` |
+| **Treasure Hunt** | `text`/`number`/`mcq`  | required         | mcq only  | optional | `text,Find where books sleep,library,,Clues,3,It's quiet and full of shelves` |
+
+Notes:
+- **Clues and poll questions are served in upload order** — keep treasure-hunt
+  clues sequenced in the file.
+- **Hints** are optional per question; the **hint penalty** (% of points lost
+  when a solver reveals the hint) is set per *event*, not per question.
+- **Polls are unscored** — there's no correct answer, no leaderboard; players
+  see live vote distributions instead.
 
 ## Features
 
@@ -138,17 +161,22 @@ CSV or XLSX with these columns (case-insensitive):
   events, and filter questions by category and difficulty.
 - **Event configuration** — per-question time limit, base points, speed bonus,
   leaderboard cadence, and manual/auto advance.
-- **Four question types** — multiple choice, true/false, text, and number.
+- **Four event types** — **Quiz**, **Puzzle** (typed answers with optional,
+  points-costing hints), **Poll** (unscored, live vote distributions), and
+  **Treasure Hunt** (ordered clues with hints). All share one real-time loop.
+- **Five question types** — multiple choice, true/false, text, number, and poll.
 - **Real-time gameplay** — join via 6-char code, lobby, server-timed questions,
   live leaderboard, and host controls (start / next / pause / resume / end).
+- **Admin dashboard** — a sidebar console (Overview, Question Banks, Events,
+  Live Control, Reports, Settings) for the whole host workflow.
 - **Auto-balanced teams** (optional) — the host sets a team count; joiners are
   spread evenly across teams; a team's score is the sum of its members';
   standings show teams alongside individuals.
 - **Persisted results** — every completed event is saved (final standings and
   per-answer records).
-- **Reports dashboard** (`/reports`, password-gated) — past events with final /
-  team standings, per-question correct-rate, average time-to-answer, and answer
-  distribution.
+- **Reports** (`/host/reports`, password-gated) — past events with final /
+  team standings (or poll results), per-question correct-rate, average
+  time-to-answer, and answer distribution.
 
 ### Notes & limitations
 

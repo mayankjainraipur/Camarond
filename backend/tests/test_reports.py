@@ -59,6 +59,37 @@ def test_full_report(client, seeded_bank):
     assert by_type["text"]["distribution"] == []
 
 
+POLL_CSV = (
+    "type,content,correct_answer,options,category\n"
+    "poll,Best language?,,Python|Go|Rust,Tech\n"
+    "poll,Tabs or spaces?,,Tabs|Spaces,Tech\n"
+).encode()
+
+
+def test_poll_report_has_distribution_and_no_winner(client):
+    bank = client.post(
+        "/api/banks/upload?name=Poll%20Bank",
+        files={"file": ("poll.csv", POLL_CSV, "text/csv")},
+    ).json()["bank"]["id"]
+    ev = client.post(
+        "/api/events",
+        json={"name": "Poll Event", "bank_id": bank, "event_type": "poll"},
+    ).json()
+    # three voters per question; majority differs to check the tally
+    _play(ev["id"], {"p0": ["Python", "Tabs"], "p1": ["Python", "Spaces"], "p2": ["Go", "Tabs"]})
+
+    summary = next(s for s in client.get("/api/reports/events").json() if s["id"] == ev["id"])
+    assert summary["winner"] is None  # polls have no winner
+
+    rep = client.get(f"/api/reports/events/{ev['id']}").json()
+    assert rep["participant_count"] == 3
+    q0 = rep["questions"][0]
+    assert q0["type"] == "poll"
+    dist = {d["answer"]: d["count"] for d in q0["distribution"]}
+    assert dist["Python"] == 2 and dist["Go"] == 1
+    assert q0["correct_count"] == 0  # nothing is "correct" in a poll
+
+
 def test_report_missing_event_404(client):
     assert client.get("/api/reports/events/999999").status_code == 404
 

@@ -47,6 +47,12 @@ class GameSession:
     auto_advance: bool
     questions: list[dict]  # normalized question dicts, including correct_answer
 
+    # Event type governs scoring + reveal behaviour. "quiz" is the default and
+    # the only scored-with-no-hints type; "puzzle"/"treasure_hunt" add hints;
+    # "poll" is unscored (opinion only).
+    event_type: str = "quiz"
+    hint_penalty: int = 0  # percent of points forfeited when a hint is used
+
     # Team mode: 0-based teams labelled "Team 1".."Team N". team_count is 0
     # when team mode is off, which makes every team code path a no-op.
     team_mode: bool = False
@@ -115,6 +121,10 @@ class GameSession:
 
     # ---- question access --------------------------------------------------
     @property
+    def scored(self) -> bool:
+        return scoring.is_scored(self.event_type)
+
+    @property
     def total(self) -> int:
         return len(self.questions)
 
@@ -158,7 +168,7 @@ class GameSession:
         self.state = COMPLETED
 
     # ---- answers ----------------------------------------------------------
-    def submit_answer(self, sid: str, answer) -> dict:
+    def submit_answer(self, sid: str, answer, used_hint: bool = False) -> dict:
         p = self.participants.get(sid)
         q = self.current_question()
         if p is None or q is None or self.state != QUESTION:
@@ -167,6 +177,21 @@ class GameSession:
             return {"accepted": False, "reason": "already_answered"}
 
         elapsed = time.time() - self.started_at
+        p.answered_index = self.index
+
+        if not self.scored:
+            # Poll: record the vote, no correctness, no points.
+            self.responses.setdefault(self.index, []).append(
+                {
+                    "participant_name": p.name,
+                    "submitted_answer": str(answer) if answer is not None else None,
+                    "is_correct": False,
+                    "points": 0,
+                    "elapsed_seconds": round(elapsed, 3),
+                }
+            )
+            return {"accepted": True, "recorded": True}
+
         correct = scoring.is_correct(q["type"], q["correct_answer"], answer)
         gained = scoring.award_points(
             correct=correct,
@@ -174,9 +199,10 @@ class GameSession:
             speed_bonus=self.speed_bonus,
             time_limit=self.time_limit,
             elapsed=elapsed,
+            used_hint=used_hint,
+            hint_penalty=self.hint_penalty,
         )
         p.score += gained
-        p.answered_index = self.index
         # Record for the durable report. The already_answered guard above
         # ensures exactly one record per participant per question.
         self.responses.setdefault(self.index, []).append(
@@ -188,10 +214,23 @@ class GameSession:
                 "elapsed_seconds": round(elapsed, 3),
             }
         )
-        return {"accepted": True, "correct": correct, "points": gained}
+        return {"accepted": True, "correct": correct, "points": gained, "usedHint": used_hint}
 
     def answered_count(self) -> int:
         return sum(1 for p in self.participants.values() if p.answered_index == self.index)
+
+    def distribution(self, index: int | None = None) -> list[dict]:
+        """Tally of submitted answers for a question (defaults to current),
+        ordered most-voted first. Drives the poll results view."""
+        if index is None:
+            index = self.index
+        counts: dict[str, int] = {}
+        for r in self.responses.get(index, []):
+            ans = r["submitted_answer"] if r["submitted_answer"] is not None else "(no answer)"
+            counts[ans] = counts.get(ans, 0) + 1
+        rows = [{"answer": ans, "count": n} for ans, n in counts.items()]
+        rows.sort(key=lambda r: r["count"], reverse=True)
+        return rows
 
     # ---- serializable payloads -------------------------------------------
     def question_payload(self) -> dict:
@@ -199,12 +238,15 @@ class GameSession:
         q = self.current_question() or {}
         return {
             "eventId": self.event_id,
+            "eventType": self.event_type,
             "index": self.index,
             "total": self.total,
             "questionId": self.index,  # index doubles as the per-game question id
             "type": q.get("type"),
             "content": q.get("content"),
             "options": q.get("options"),
+            "hint": q.get("hint"),
+            "hintPenalty": self.hint_penalty,
             "timeLimit": self.time_limit,
             "startedAt": self.started_at,
         }
@@ -213,6 +255,7 @@ class GameSession:
         return {
             "eventId": self.event_id,
             "eventName": self.event_name,
+            "eventType": self.event_type,
             "state": self.state,
             "participantCount": len(self.participants),
             "participants": [p.name for p in self.participants.values()],
@@ -237,12 +280,16 @@ class GameSession:
         q = self.current_question()
         return {
             "eventId": self.event_id,
+            "eventType": self.event_type,
             "state": self.state,
             "index": self.index,
             "total": self.total,
             "participantCount": len(self.participants),
             "answeredCount": self.answered_count(),
             "correctAnswer": q.get("correct_answer") if q else None,
+            "hint": q.get("hint") if q else None,
+            # Live vote tally for polls; the host watches it accumulate.
+            "distribution": self.distribution() if not self.scored else [],
             "teamMode": self.team_mode,
             "teams": self.team_leaderboard(),
         }
@@ -276,10 +323,15 @@ class GameManager:
             if event is None:
                 return None
 
-            stmt = select(Question).where(
-                Question.bank_id == event.bank_id,
-                Question.difficulty >= event.difficulty_min,
-                Question.difficulty <= event.difficulty_max,
+            stmt = (
+                select(Question)
+                .where(
+                    Question.bank_id == event.bank_id,
+                    Question.difficulty >= event.difficulty_min,
+                    Question.difficulty <= event.difficulty_max,
+                )
+                # Preserve upload order — essential for treasure-hunt clue trails.
+                .order_by(Question.id)
             )
             if event.categories:
                 stmt = stmt.where(Question.category.in_(event.categories))
@@ -292,6 +344,7 @@ class GameManager:
                     "options": q.options,
                     "category": q.category,
                     "difficulty": q.difficulty,
+                    "hint": q.hint,
                 }
                 for q in db.scalars(stmt).all()
             ]
@@ -299,6 +352,8 @@ class GameManager:
             return GameSession(
                 event_id=event.id,
                 event_name=event.name,
+                event_type=event.event_type,
+                hint_penalty=event.hint_penalty,
                 time_limit=event.time_limit,
                 base_points=event.base_points,
                 speed_bonus=event.speed_bonus,

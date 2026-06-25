@@ -8,12 +8,15 @@ export interface BankSummary {
   difficulty_range: [number, number];
 }
 
+export type EventType = "quiz" | "puzzle" | "poll" | "treasure_hunt";
+
 export interface EventOut {
   id: number;
   name: string;
   description: string;
   code: string;
   status: string;
+  event_type: EventType;
   question_count: number;
   team_mode: boolean;
   team_count: number;
@@ -41,6 +44,20 @@ export async function listBanks() {
   return handle<BankSummary[]>(await fetch("/api/banks"));
 }
 
+export interface BankQuestion {
+  id: number;
+  type: string;
+  content: string;
+  options: string[] | null;
+  category: string;
+  difficulty: number;
+  hint: string | null;
+}
+
+export async function previewBank(bankId: number) {
+  return handle<BankQuestion[]>(await fetch(`/api/banks/${bankId}/questions`));
+}
+
 export async function createEvent(payload: Record<string, unknown>) {
   const res = await fetch("/api/events", {
     method: "POST",
@@ -48,6 +65,10 @@ export async function createEvent(payload: Record<string, unknown>) {
     body: JSON.stringify(payload),
   });
   return handle<EventOut>(res);
+}
+
+export async function listEvents() {
+  return handle<EventOut[]>(await fetch("/api/events"));
 }
 
 export async function getEventByCode(code: string) {
@@ -59,6 +80,7 @@ export interface ReportEventSummary {
   id: number;
   name: string;
   code: string;
+  event_type: EventType;
   ended_at: string | null;
   participant_count: number;
   team_mode: boolean;
@@ -101,6 +123,7 @@ export interface EventReport {
   id: number;
   name: string;
   code: string;
+  event_type: EventType;
   started_at: string | null;
   ended_at: string | null;
   duration_seconds: number | null;

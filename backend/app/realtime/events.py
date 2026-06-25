@@ -40,3 +40,14 @@ class S2C:
 #   - event:complete adds  {teamMode: bool, teams: TeamEntry[], winningTeam}
 # TeamEntry = {index, rank, name, score, members: string[]}
 # --------------------------------------------------------------------------
+# Event types (Phase 3) — puzzle / poll / treasure_hunt. Additive fields only,
+# no new event names; the question loop is shared across all types.
+#   - question:show adds  {eventType: str, hint: str|None, hintPenalty: int}
+#   - lobby:update / host:monitor / event:complete add  {eventType: str}
+#   - participant:answer payload adds  {usedHint: bool}  (puzzle/treasure_hunt);
+#     the server applies the hint_penalty% deduction authoritatively.
+#   - leaderboard:update / host:monitor add  {distribution: [{answer, count}]}
+#     — the vote tally, populated for unscored poll events ([] otherwise).
+#   - Poll (unscored): event:complete has winner=null and leaderboard=[];
+#     answer acks return {recorded: true} instead of {correct, points}.
+# --------------------------------------------------------------------------

@@ -1,12 +1,13 @@
 """Parse uploaded XLSX/CSV question banks into normalized question dicts.
 
 Expected columns (case-insensitive, order-independent):
-    type             mcq | text | number | true_false  (aliases accepted)
+    type             mcq | text | number | true_false | poll  (aliases accepted)
     content          the question text                 (required)
-    correct_answer   the correct answer                (required)
-    options          for mcq only, pipe-separated: "Tokyo|Seoul|Beijing|Osaka"
+    correct_answer   the correct answer                (required; optional for poll)
+    options          for mcq/poll, pipe-separated: "Tokyo|Seoul|Beijing|Osaka"
     category         topic/domain        (optional, defaults to General Knowledge)
     difficulty       integer 1-10        (optional, defaults to 1)
+    hint             clue for puzzle/treasure-hunt      (optional)
 """
 from __future__ import annotations
 
@@ -30,7 +31,13 @@ _TYPE_ALIASES = {
     "truefalse": "true_false",
     "tf": "true_false",
     "boolean": "true_false",
+    "poll": "poll",
+    "vote": "poll",
+    "survey": "poll",
 }
+
+# Types that carry a pipe-separated list of options.
+_OPTION_TYPES = {"mcq", "poll"}
 
 
 def _read_dataframe(filename: str, raw: bytes) -> pd.DataFrame:
@@ -68,24 +75,30 @@ def parse_questions(filename: str, raw: bytes) -> tuple[list[dict], list[str]]:
 
         content = str(row.get("content", "")).strip()
         correct = str(row.get("correct_answer", "")).strip()
-        if not content or not correct:
-            errors.append(f"Row {line}: missing content or correct_answer, skipped.")
+        if not content:
+            errors.append(f"Row {line}: missing content, skipped.")
+            continue
+        # Every type needs a correct answer except poll (which has no "right" answer).
+        if not correct and qtype != "poll":
+            errors.append(f"Row {line}: missing correct_answer, skipped.")
             continue
 
         options = None
-        if qtype == "mcq":
+        if qtype in _OPTION_TYPES:
             raw_opts = str(row.get("options", "")).strip()
             options = [o.strip() for o in raw_opts.split("|") if o.strip()]
             if len(options) < 2:
-                errors.append(f"Row {line}: mcq needs >=2 pipe-separated options, skipped.")
+                errors.append(f"Row {line}: {qtype} needs >=2 pipe-separated options, skipped.")
                 continue
-            if correct not in options:
+            # poll has no correct answer to validate against.
+            if qtype == "mcq" and correct not in options:
                 errors.append(
                     f"Row {line}: correct_answer '{correct}' is not one of the options, skipped."
                 )
                 continue
 
         category = str(row.get("category", "")).strip() or "General Knowledge"
+        hint = str(row.get("hint", "")).strip() or None
 
         difficulty = 1
         raw_diff = str(row.get("difficulty", "")).strip()
@@ -103,6 +116,7 @@ def parse_questions(filename: str, raw: bytes) -> tuple[list[dict], list[str]]:
                 "options": options,
                 "category": category,
                 "difficulty": difficulty,
+                "hint": hint,
             }
         )
 
