@@ -12,7 +12,7 @@ import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import auth, banks, events
+from .api import auth, banks, events, reports
 from .config import settings
 from .database import init_db
 from .realtime.server import sio
@@ -40,6 +40,7 @@ def create_fastapi() -> FastAPI:
     api.include_router(auth.router)
     api.include_router(banks.router)
     api.include_router(events.router)
+    api.include_router(reports.router)
     return api
 
 

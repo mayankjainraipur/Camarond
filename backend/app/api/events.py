@@ -41,6 +41,8 @@ def _to_out(db: Session, event: Event) -> EventOut:
         code=event.code,
         status=event.status,
         question_count=_count_matching_questions(db, event),
+        team_mode=event.team_mode,
+        team_count=event.team_count,
     )
 
 
@@ -64,6 +66,8 @@ def create_event(payload: EventCreate, db: Session = Depends(get_db)):
         speed_bonus=payload.speed_bonus,
         leaderboard_after_each=payload.leaderboard_after_each,
         auto_advance=payload.auto_advance,
+        team_mode=payload.team_mode,
+        team_count=payload.team_count,
     )
     db.add(event)
     db.commit()

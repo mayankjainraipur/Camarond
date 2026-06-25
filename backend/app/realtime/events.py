@@ -30,3 +30,13 @@ class S2C:
     HOST_MONITOR = "host:monitor"        # host-only: submitted count etc.
     EVENT_COMPLETE = "event:complete"    # final leaderboard + winner
     ERROR = "error"
+
+
+# --------------------------------------------------------------------------
+# Team mode (auto-balanced) — additive payload fields, no new event names.
+#   - participant:join ack adds  {team: int, teamLabel: str}  when team mode on
+#   - lobby:update / host:monitor add  {teamMode: bool, teams: TeamEntry[]}
+#   - leaderboard:update adds  {teams: TeamEntry[]}  ([] when off)
+#   - event:complete adds  {teamMode: bool, teams: TeamEntry[], winningTeam}
+# TeamEntry = {index, rank, name, score, members: string[]}
+# --------------------------------------------------------------------------

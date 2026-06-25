@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from ..config import settings
 from ..database import SessionLocal
-from ..models import Event
+from ..models import Event, ParticipantResult, QuestionResponse, _now
 from .events import C2S, S2C
 from .manager import COMPLETED, LOCKED, QUESTION, game_manager
 
@@ -154,7 +154,7 @@ async def participant_join(sid, data):
 
     await sio.enter_room(sid, _room(event_id))
     _sid_event[sid] = event_id
-    session.add_participant(sid, name)
+    participant = session.add_participant(sid, name)
 
     await sio.emit(S2C.LOBBY_UPDATE, session.lobby_state(), room=_room(event_id))
     await sio.emit(S2C.HOST_MONITOR, session.monitor_state(), room=_host_room(event_id))
@@ -165,6 +165,9 @@ async def participant_join(sid, data):
         "eventName": session.event_name,
         "state": session.state,
     }
+    if session.team_mode:
+        payload["team"] = participant.team
+        payload["teamLabel"] = session.team_label(participant.team)
     # If they joined mid-question, send them the current question immediately.
     if session.state == QUESTION:
         payload["currentQuestion"] = session.question_payload()
@@ -198,6 +201,14 @@ async def _push_next(event_id: int) -> None:
         await _complete(event_id)
         return
 
+    # Stamp the event's start time when the first question goes live.
+    if session.index == 0:
+        with SessionLocal() as db:
+            event = db.get(Event, event_id)
+            if event and event.started_at is None:
+                event.started_at = _now()
+                db.commit()
+
     await sio.emit(S2C.QUESTION_SHOW, session.question_payload(), room=_room(event_id))
     await sio.emit(S2C.HOST_MONITOR, session.monitor_state(), room=_host_room(event_id))
     # Server-authoritative timer: lock answers when time runs out.
@@ -227,7 +238,11 @@ async def _broadcast_leaderboard(event_id: int) -> None:
         return
     await sio.emit(
         S2C.LEADERBOARD_UPDATE,
-        {"eventId": event_id, "entries": session.leaderboard()},
+        {
+            "eventId": event_id,
+            "entries": session.leaderboard(),
+            "teams": session.team_leaderboard(),  # [] when team mode is off
+        },
         room=_room(event_id),
     )
 
@@ -238,15 +253,63 @@ async def _complete(event_id: int) -> None:
         return
     session.complete()
     board = session.leaderboard()
+    teams = session.team_leaderboard()
     await sio.emit(
         S2C.EVENT_COMPLETE,
-        {"eventId": event_id, "leaderboard": board, "winner": board[0] if board else None},
+        {
+            "eventId": event_id,
+            "leaderboard": board,
+            "winner": board[0] if board else None,
+            "teamMode": session.team_mode,
+            "teams": teams,
+            "winningTeam": teams[0] if teams else None,
+        },
         room=_room(event_id),
     )
 
-    # Persist final status; game state itself stays in memory until restart.
+    # Persist the durable snapshot (status, timestamps, per-participant results,
+    # per-answer records) in a single transaction. Idempotent: never double-write.
     with SessionLocal() as db:
         event = db.get(Event, event_id)
-        if event:
-            event.status = COMPLETED
-            db.commit()
+        if event is None:
+            return
+
+        already_persisted = session.persisted or (
+            event.status == COMPLETED and event.ended_at is not None
+        )
+        if not already_persisted:
+            for entry in board:
+                db.add(
+                    ParticipantResult(
+                        event_id=event_id,
+                        name=entry["name"],
+                        team=entry.get("team"),
+                        final_score=entry["score"],
+                        rank=entry["rank"],
+                    )
+                )
+            for index, records in session.responses.items():
+                snap = session.shown.get(index, {})
+                for r in records:
+                    db.add(
+                        QuestionResponse(
+                            event_id=event_id,
+                            question_index=index,
+                            question_content=snap.get("content", ""),
+                            question_type=snap.get("type", ""),
+                            correct_answer=snap.get("correct_answer", ""),
+                            participant_name=r["participant_name"],
+                            submitted_answer=r["submitted_answer"],
+                            is_correct=r["is_correct"],
+                            points=r["points"],
+                            elapsed_seconds=r["elapsed_seconds"],
+                        )
+                    )
+
+        event.status = COMPLETED
+        if event.ended_at is None:
+            event.ended_at = _now()
+        if event.started_at is None:
+            event.started_at = _now()
+        db.commit()
+        session.persisted = True

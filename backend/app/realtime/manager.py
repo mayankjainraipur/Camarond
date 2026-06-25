@@ -33,6 +33,7 @@ class Participant:
     name: str
     score: int = 0
     answered_index: int = -1  # last question index this participant answered
+    team: int = -1            # 0-based team index; -1 when team mode is off
 
 
 @dataclass
@@ -46,19 +47,71 @@ class GameSession:
     auto_advance: bool
     questions: list[dict]  # normalized question dicts, including correct_answer
 
+    # Team mode: 0-based teams labelled "Team 1".."Team N". team_count is 0
+    # when team mode is off, which makes every team code path a no-op.
+    team_mode: bool = False
+    team_count: int = 0
+
     state: str = LOBBY
     index: int = -1            # current question index (-1 = not started)
     started_at: float = 0.0    # server timestamp the current question went live
     participants: dict[str, Participant] = field(default_factory=dict)
 
+    # --- result capture (persisted once at completion) ---
+    # question index -> list of answer records
+    responses: dict[int, list[dict]] = field(default_factory=dict)
+    # question index -> {content, type, correct_answer} snapshot taken when shown
+    shown: dict[int, dict] = field(default_factory=dict)
+    persisted: bool = False    # guards against double-writing on re-complete
+
     # ---- participants -----------------------------------------------------
     def add_participant(self, sid: str, name: str) -> Participant:
         p = Participant(sid=sid, name=name.strip()[:40] or "Player")
+        if self.team_mode and self.team_count > 0:
+            # Assign before inserting so the joiner isn't counted against itself.
+            p.team = self._assign_team()
         self.participants[sid] = p
         return p
 
     def remove_participant(self, sid: str) -> None:
         self.participants.pop(sid, None)
+
+    # ---- teams ------------------------------------------------------------
+    def _assign_team(self) -> int:
+        """Pick the team with the fewest current members (ties -> lowest index)."""
+        counts = [0] * self.team_count
+        for p in self.participants.values():
+            if 0 <= p.team < self.team_count:
+                counts[p.team] += 1
+        return min(range(self.team_count), key=lambda i: (counts[i], i))
+
+    def team_label(self, index: int) -> str:
+        return f"Team {index + 1}"
+
+    def team_leaderboard(self) -> list[dict]:
+        """Ranked team standings (sum of member scores). Empty when team mode
+        is off; otherwise always returns all N teams (empty ones rank last)."""
+        if not self.team_mode or self.team_count <= 0:
+            return []
+        scores = [0] * self.team_count
+        members: list[list[str]] = [[] for _ in range(self.team_count)]
+        for p in self.participants.values():
+            if 0 <= p.team < self.team_count:
+                scores[p.team] += p.score
+                members[p.team].append(p.name)
+        rows = [
+            {
+                "index": i,
+                "name": self.team_label(i),
+                "score": scores[i],
+                "members": members[i],
+            }
+            for i in range(self.team_count)
+        ]
+        rows.sort(key=lambda r: r["score"], reverse=True)
+        for rank, r in enumerate(rows, start=1):
+            r["rank"] = rank
+        return rows
 
     # ---- question access --------------------------------------------------
     @property
@@ -81,6 +134,12 @@ class GameSession:
             return None
         self.state = QUESTION
         self.started_at = time.time()
+        # Snapshot the question for the durable report (denormalized).
+        self.shown[self.index] = {
+            "content": q.get("content", ""),
+            "type": q.get("type", ""),
+            "correct_answer": q.get("correct_answer", ""),
+        }
         return q
 
     def lock(self) -> None:
@@ -118,6 +177,17 @@ class GameSession:
         )
         p.score += gained
         p.answered_index = self.index
+        # Record for the durable report. The already_answered guard above
+        # ensures exactly one record per participant per question.
+        self.responses.setdefault(self.index, []).append(
+            {
+                "participant_name": p.name,
+                "submitted_answer": str(answer) if answer is not None else None,
+                "is_correct": correct,
+                "points": gained,
+                "elapsed_seconds": round(elapsed, 3),
+            }
+        )
         return {"accepted": True, "correct": correct, "points": gained}
 
     def answered_count(self) -> int:
@@ -147,14 +217,19 @@ class GameSession:
             "participantCount": len(self.participants),
             "participants": [p.name for p in self.participants.values()],
             "total": self.total,
+            "teamMode": self.team_mode,
+            "teams": self.team_leaderboard(),
         }
 
     def leaderboard(self) -> list[dict]:
         ranked = sorted(self.participants.values(), key=lambda p: p.score, reverse=True)
-        return [
-            {"rank": i + 1, "name": p.name, "score": p.score}
-            for i, p in enumerate(ranked)
-        ]
+        rows = []
+        for i, p in enumerate(ranked):
+            row = {"rank": i + 1, "name": p.name, "score": p.score}
+            if self.team_mode and 0 <= p.team < self.team_count:
+                row["team"] = self.team_label(p.team)
+            rows.append(row)
+        return rows
 
     def monitor_state(self) -> dict:
         # host-only channel — safe to include the correct answer here so the
@@ -168,6 +243,8 @@ class GameSession:
             "participantCount": len(self.participants),
             "answeredCount": self.answered_count(),
             "correctAnswer": q.get("correct_answer") if q else None,
+            "teamMode": self.team_mode,
+            "teams": self.team_leaderboard(),
         }
 
 
@@ -227,6 +304,8 @@ class GameManager:
                 speed_bonus=event.speed_bonus,
                 leaderboard_after_each=event.leaderboard_after_each,
                 auto_advance=event.auto_advance,
+                team_mode=event.team_mode,
+                team_count=event.team_count if event.team_mode else 0,
                 questions=questions,
                 state=COMPLETED if event.status == COMPLETED else LOBBY,
             )
