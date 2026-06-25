@@ -15,6 +15,8 @@ export interface EventOut {
   code: string;
   status: string;
   question_count: number;
+  team_mode: boolean;
+  team_count: number;
 }
 
 async function handle<T>(res: Response): Promise<T> {
@@ -50,6 +52,71 @@ export async function createEvent(payload: Record<string, unknown>) {
 
 export async function getEventByCode(code: string) {
   return handle<EventOut>(await fetch(`/api/events/code/${encodeURIComponent(code)}`));
+}
+
+// --- Reports (post-event analytics) ---
+export interface ReportEventSummary {
+  id: number;
+  name: string;
+  code: string;
+  ended_at: string | null;
+  participant_count: number;
+  team_mode: boolean;
+  winner: string | null;
+  duration_seconds: number | null;
+}
+
+export interface AnswerDistributionItem {
+  answer: string;
+  count: number;
+}
+
+export interface QuestionStat {
+  question_index: number;
+  content: string;
+  type: string;
+  correct_answer: string;
+  response_count: number;
+  correct_count: number;
+  correct_rate: number; // 0..1
+  avg_elapsed_seconds: number | null;
+  distribution: AnswerDistributionItem[];
+}
+
+export interface ReportLeaderboardEntry {
+  rank: number;
+  name: string;
+  score: number;
+  team: string | null;
+}
+
+export interface TeamStanding {
+  rank: number;
+  team: string;
+  total_score: number;
+  members: number;
+}
+
+export interface EventReport {
+  id: number;
+  name: string;
+  code: string;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  participant_count: number;
+  team_mode: boolean;
+  leaderboard: ReportLeaderboardEntry[];
+  team_standings: TeamStanding[];
+  questions: QuestionStat[];
+}
+
+export async function listReports() {
+  return handle<ReportEventSummary[]>(await fetch("/api/reports/events"));
+}
+
+export async function getReport(id: number) {
+  return handle<EventReport>(await fetch(`/api/reports/events/${id}`));
 }
 
 export async function verifyHostPassword(password: string): Promise<boolean> {

@@ -38,6 +38,16 @@ export interface QuestionShow {
   startedAt: number;
 }
 
+// Team standings row (auto-balanced team mode). Present only when team mode
+// is on; a superset of LeaderboardEntry so it renders in the same <Board />.
+export interface TeamEntry {
+  index: number;
+  rank: number;
+  name: string;
+  score: number;
+  members: string[];
+}
+
 export interface LobbyState {
   eventId: number;
   eventName: string;
@@ -45,12 +55,22 @@ export interface LobbyState {
   participantCount: number;
   participants: string[];
   total: number;
+  teamMode?: boolean;
+  teams?: TeamEntry[];
 }
 
 export interface LeaderboardEntry {
   rank: number;
   name: string;
   score: number;
+  team?: string; // team label in team mode; absent otherwise
+}
+
+// Payload of S2C.LEADERBOARD_UPDATE.
+export interface LeaderboardUpdate {
+  eventId: number;
+  entries: LeaderboardEntry[];
+  teams?: TeamEntry[];
 }
 
 export interface MonitorState {
@@ -62,10 +82,15 @@ export interface MonitorState {
   answeredCount: number;
   // host-only: the correct answer for the current question (never sent to players).
   correctAnswer?: string | null;
+  teamMode?: boolean;
+  teams?: TeamEntry[];
 }
 
 export interface EventComplete {
   eventId: number;
   leaderboard: LeaderboardEntry[];
   winner: LeaderboardEntry | null;
+  teamMode?: boolean;
+  teams?: TeamEntry[];
+  winningTeam?: TeamEntry | null;
 }

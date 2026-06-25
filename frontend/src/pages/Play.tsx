@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { emitAck, getSocket } from "../lib/socket";
+import Board from "../components/Board";
 import {
   C2S,
   S2C,
   EventComplete,
   LeaderboardEntry,
+  LeaderboardUpdate,
   QuestionShow,
+  TeamEntry,
 } from "../types/contracts";
 
 type Screen = "join" | "lobby" | "question" | "locked" | "leaderboard" | "results";
@@ -32,8 +35,10 @@ export default function Play() {
   const [eventName, setEventName] = useState("");
   const [error, setError] = useState("");
 
+  const [team, setTeam] = useState("");
   const [question, setQuestion] = useState<QuestionShow | null>(null);
   const [board, setBoard] = useState<LeaderboardEntry[]>([]);
+  const [teams, setTeams] = useState<TeamEntry[]>([]);
   const [result, setResult] = useState<EventComplete | null>(null);
 
   useEffect(() => {
@@ -43,12 +48,14 @@ export default function Play() {
       setScreen("question");
     };
     const onLock = () => setScreen((cur) => (cur === "question" ? "locked" : cur));
-    const onBoard = (d: { entries: LeaderboardEntry[] }) => {
+    const onBoard = (d: LeaderboardUpdate) => {
       setBoard(d.entries);
+      if (d.teams) setTeams(d.teams);
       setScreen((cur) => (cur === "results" ? cur : "leaderboard"));
     };
     const onComplete = (d: EventComplete) => {
       setResult(d);
+      if (d.teams) setTeams(d.teams);
       setScreen("results");
     };
 
@@ -74,6 +81,7 @@ export default function Play() {
       return;
     }
     setEventName(res.eventName);
+    if (res.teamLabel) setTeam(res.teamLabel);
     if (res.currentQuestion) {
       setQuestion(res.currentQuestion);
       setScreen("question");
@@ -118,6 +126,11 @@ export default function Play() {
           <span className="tally go">
             <span className="dot" /> You're in
           </span>
+          {team && (
+            <p className="muted" style={{ marginTop: 14 }}>
+              You're on <b style={{ color: "var(--ink)" }}>{team}</b>
+            </p>
+          )}
           <p className="muted" style={{ marginTop: 18 }}>
             Sit tight — the host will start the quiz any second now.
           </p>
@@ -134,8 +147,14 @@ export default function Play() {
     return (
       <div className="wrap">
         <Brand />
+        {teams.length > 0 && (
+          <div className="card">
+            <h2>Team standings</h2>
+            <Board entries={teams} />
+          </div>
+        )}
         <div className="card">
-          <h2>Standings</h2>
+          <h2>{teams.length > 0 ? "Your standings" : "Standings"}</h2>
           <Board entries={board} />
           <p className="muted center" style={{ marginTop: 14 }}>
             Next question coming up…
@@ -147,17 +166,29 @@ export default function Play() {
 
   // results
   const winner = result?.winner;
+  const winningTeam = result?.winningTeam;
+  const isTeam = (result?.teams?.length ?? teams.length) > 0;
   return (
     <div className="wrap">
       <Brand />
       <div className="card center">
         <h2 className="plain" style={{ justifyContent: "center" }}>Final result</h2>
         <p style={{ fontSize: "2.6rem", margin: "4px 0" }}>🏆</p>
-        {winner && <p className="big" style={{ color: "var(--gold)" }}>{winner.name}</p>}
+        {isTeam ? (
+          winningTeam && <p className="big" style={{ color: "var(--gold)" }}>{winningTeam.name}</p>
+        ) : (
+          winner && <p className="big" style={{ color: "var(--gold)" }}>{winner.name}</p>
+        )}
         <p className="muted">takes the crown</p>
       </div>
+      {isTeam && (
+        <div className="card">
+          <h2>Team standings</h2>
+          <Board entries={result?.teams ?? teams} />
+        </div>
+      )}
       <div className="card">
-        <h2>Final standings</h2>
+        <h2>{isTeam ? "Individual standings" : "Final standings"}</h2>
         <Board entries={result?.leaderboard ?? board} />
       </div>
     </div>
@@ -295,23 +326,6 @@ function FreeInput({
       <button className="block" disabled={disabled || !val.trim()} onClick={() => onSubmit(val)}>
         Submit answer
       </button>
-    </div>
-  );
-}
-
-function Board({ entries }: { entries: LeaderboardEntry[] }) {
-  if (entries.length === 0) {
-    return <p className="muted">Scores will show up after the first question.</p>;
-  }
-  return (
-    <div>
-      {entries.map((e) => (
-        <div key={e.name} className={`lb-row ${e.rank === 1 ? "top1" : ""}`}>
-          <span className="rank">{e.rank}</span>
-          <span className="nm">{e.name}</span>
-          <span className="sc">{e.score.toLocaleString()}</span>
-        </div>
-      ))}
     </div>
   );
 }

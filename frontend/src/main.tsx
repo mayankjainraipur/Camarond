@@ -6,6 +6,7 @@ import "./index.css";
 import Home from "./pages/Home";
 import Host from "./pages/Host";
 import Play from "./pages/Play";
+import Reports from "./pages/Reports";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -13,6 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/host" element={<Host />} />
+        <Route path="/reports" element={<Reports />} />
         {/* Participants land here from the shared link: /play?code=ABC123 */}
         <Route path="/play" element={<Play />} />
       </Routes>

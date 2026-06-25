@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  BankSummary,
-  EventOut,
-  createEvent,
-  listBanks,
-  uploadBank,
-  verifyHostPassword,
-} from "../lib/api";
+import { Link } from "react-router-dom";
+import { BankSummary, EventOut, createEvent, listBanks, uploadBank } from "../lib/api";
 import { emitAck, getSocket } from "../lib/socket";
-import { C2S, S2C, LeaderboardEntry, MonitorState, QuestionShow } from "../types/contracts";
+import PasswordGate, { HOST_AUTH_KEY } from "../components/PasswordGate";
+import {
+  C2S,
+  S2C,
+  LeaderboardEntry,
+  LeaderboardUpdate,
+  MonitorState,
+  QuestionShow,
+  TeamEntry,
+} from "../types/contracts";
 import "./Host.css";
 
-const SESSION_KEY = "host_auth";
+const SESSION_KEY = HOST_AUTH_KEY;
 const LIVE_EVENT_KEY = "host_live_event";
 
 type Phase = "setup" | "live";
@@ -29,10 +32,8 @@ export default function Host() {
   if (!authed) {
     return (
       <PasswordGate
-        onSuccess={() => {
-          sessionStorage.setItem(SESSION_KEY, "1");
-          setAuthed(true);
-        }}
+        help="Enter the host password to open the console."
+        onSuccess={() => setAuthed(true)}
       />
     );
   }
@@ -88,48 +89,15 @@ function Rail({ phase, eventName }: { phase: Phase; eventName?: string }) {
         )}
       </div>
       <div className="host-spacer" />
+      <Link
+        to="/reports"
+        className="host-evname"
+        style={{ textDecoration: "none", marginRight: 4 }}
+      >
+        View past results →
+      </Link>
       <div className={`host-tally ${live ? "live" : ""}`}>
         <span className="dot" /> {live ? "On Air" : "Off Air"}
-      </div>
-    </div>
-  );
-}
-
-function PasswordGate({ onSuccess }: { onSuccess: () => void }) {
-  const [pw, setPw] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function submit() {
-    setBusy(true);
-    setError("");
-    const ok = await verifyHostPassword(pw);
-    setBusy(false);
-    if (ok) onSuccess();
-    else setError("That password didn't match. Try again.");
-  }
-
-  return (
-    <div className="host">
-      <div className="host-shell">
-        <div className="host-card host-gate">
-          <h2>Host access</h2>
-          <p className="host-help">Enter the host password to open the console.</p>
-          <label>Password</label>
-          <input
-            type="password"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && pw && !busy && submit()}
-            placeholder="••••••"
-            autoFocus
-          />
-          <div style={{ height: 14 }} />
-          <button className="host-btn host-btn-gold host-btn-block" disabled={!pw || busy} onClick={submit}>
-            {busy ? "Checking…" : "Enter console"}
-          </button>
-          {error && <div className="host-error">{error}</div>}
-        </div>
       </div>
     </div>
   );
@@ -142,6 +110,8 @@ function Setup({ onReady }: { onReady: (ev: EventOut) => void }) {
   const [bankId, setBankId] = useState<number | null>(null);
   const [eventName, setEventName] = useState("Friday Quiz");
   const [timeLimit, setTimeLimit] = useState(20);
+  const [teamMode, setTeamMode] = useState(false);
+  const [teamCount, setTeamCount] = useState(4);
   const [error, setError] = useState("");
   const [imported, setImported] = useState<{ count: number; skipped: number } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -172,7 +142,13 @@ function Setup({ onReady }: { onReady: (ev: EventOut) => void }) {
     setBusy(true);
     setError("");
     try {
-      const ev = await createEvent({ name: eventName, bank_id: bankId, time_limit: timeLimit });
+      const ev = await createEvent({
+        name: eventName,
+        bank_id: bankId,
+        time_limit: timeLimit,
+        team_mode: teamMode,
+        team_count: teamCount,
+      });
       onReady(ev);
     } catch (e) {
       setError((e as Error).message);
@@ -259,6 +235,42 @@ function Setup({ onReady }: { onReady: (ev: EventOut) => void }) {
             />
           </div>
         </div>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            textTransform: "none",
+            fontFamily: "inherit",
+            letterSpacing: 0,
+            fontSize: 14,
+            color: "var(--ink)",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={teamMode}
+            onChange={(e) => setTeamMode(e.target.checked)}
+            style={{ width: "auto", margin: 0 }}
+          />
+          Team mode (auto-balanced)
+        </label>
+        {teamMode && (
+          <div>
+            <label>Number of teams</label>
+            <input
+              type="number"
+              value={teamCount}
+              min={2}
+              max={12}
+              onChange={(e) => setTeamCount(Number(e.target.value))}
+            />
+            <p className="host-help" style={{ marginTop: 6 }}>
+              Players are spread evenly across teams as they join. Team score = sum of members.
+            </p>
+          </div>
+        )}
         <div style={{ height: 18 }} />
         <button className="host-btn host-btn-gold" onClick={doCreate} disabled={!bankId || busy}>
           Create &amp; go live
@@ -282,6 +294,7 @@ function Live({
   const [monitor, setMonitor] = useState<MonitorState | null>(null);
   const [question, setQuestion] = useState<QuestionShow | null>(null);
   const [board, setBoard] = useState<LeaderboardEntry[]>([]);
+  const [teams, setTeams] = useState<TeamEntry[]>([]);
   const [done, setDone] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -289,12 +302,22 @@ function Live({
 
   useEffect(() => {
     const s = getSocket();
-    const onLobby = (d: any) => setLobby(d);
-    const onMonitor = (d: MonitorState) => setMonitor(d);
+    const onLobby = (d: any) => {
+      setLobby(d);
+      if (d.teams) setTeams(d.teams);
+    };
+    const onMonitor = (d: MonitorState) => {
+      setMonitor(d);
+      if (d.teams) setTeams(d.teams);
+    };
     const onQuestion = (d: QuestionShow) => setQuestion(d);
-    const onBoard = (d: { entries: LeaderboardEntry[] }) => setBoard(d.entries);
-    const onComplete = (d: { leaderboard: LeaderboardEntry[] }) => {
+    const onBoard = (d: LeaderboardUpdate) => {
+      setBoard(d.entries);
+      if (d.teams) setTeams(d.teams);
+    };
+    const onComplete = (d: { leaderboard: LeaderboardEntry[]; teams?: TeamEntry[] }) => {
       setBoard(d.leaderboard);
+      if (d.teams) setTeams(d.teams);
       setDone(true);
       onDone();
     };
@@ -307,6 +330,7 @@ function Live({
     emitAck<any>(C2S.HOST_JOIN, { eventId: event.id }).then((ack) => {
       if (!ack?.ok) return;
       if (ack.monitor) setMonitor(ack.monitor);
+      if (ack.monitor?.teams) setTeams(ack.monitor.teams);
       if (ack.currentQuestion) setQuestion(ack.currentQuestion);
       if (ack.leaderboard?.length) setBoard(ack.leaderboard);
       if (ack.sessionState === "completed") {
@@ -421,8 +445,36 @@ function Live({
           <NowOnAir question={question} correctAnswer={monitor?.correctAnswer ?? null} />
         )}
 
+        {event.team_mode && (
+          <div className="host-card">
+            <h2>{done ? "🏆 Final team standings" : "Team standings"}</h2>
+            {teams.length > 0 ? (
+              teams.map((t) => (
+                <div key={t.index} className={`host-lb-row ${t.rank === 1 ? "top1" : ""}`}>
+                  <span className="rank">{t.rank}</span>
+                  <span className="nm">
+                    {t.name}
+                    <small style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 8 }}>
+                      {t.members.length} {t.members.length === 1 ? "player" : "players"}
+                    </small>
+                  </span>
+                  <span className="sc">{t.score.toLocaleString()}</span>
+                </div>
+              ))
+            ) : (
+              <p className="host-empty">Teams fill in as players join.</p>
+            )}
+          </div>
+        )}
+
         <div className="host-card">
-          <h2>{done ? "🏆 Final standings" : "Live standings"}</h2>
+          <h2>
+            {event.team_mode
+              ? "Individual standings"
+              : done
+                ? "🏆 Final standings"
+                : "Live standings"}
+          </h2>
           {board.length > 0 ? (
             board.map((e) => (
               <div key={e.name} className={`host-lb-row ${e.rank === 1 ? "top1" : ""}`}>
