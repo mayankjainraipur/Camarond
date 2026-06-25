@@ -1,6 +1,9 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+EventType = Literal["quiz", "puzzle", "poll", "treasure_hunt"]
 
 
 # --------------------------------------------------------------------------
@@ -13,6 +16,7 @@ class QuestionOut(BaseModel):
     options: list[str] | None
     category: str
     difficulty: int
+    hint: str | None = None
 
     class Config:
         from_attributes = True
@@ -39,6 +43,7 @@ class EventCreate(BaseModel):
     name: str
     description: str = ""
     bank_id: int
+    event_type: EventType = "quiz"
     categories: list[str] | None = None  # None => all
     difficulty_min: int = Field(default=1, ge=1, le=10)
     difficulty_max: int = Field(default=10, ge=1, le=10)
@@ -47,6 +52,8 @@ class EventCreate(BaseModel):
     speed_bonus: bool = True
     leaderboard_after_each: bool = True
     auto_advance: bool = False
+    # Percent of points forfeited when a hint is revealed (puzzle/treasure_hunt).
+    hint_penalty: int = Field(default=50, ge=0, le=100)
     team_mode: bool = False
     team_count: int = Field(default=4, ge=2, le=12)
 
@@ -57,6 +64,7 @@ class EventOut(BaseModel):
     description: str
     code: str
     status: str
+    event_type: str = "quiz"
     question_count: int
     team_mode: bool = False
     team_count: int = 4
@@ -69,6 +77,7 @@ class ReportEventSummary(BaseModel):
     id: int
     name: str
     code: str
+    event_type: str = "quiz"
     ended_at: datetime | None
     participant_count: int
     team_mode: bool
@@ -111,6 +120,7 @@ class EventReport(BaseModel):
     id: int
     name: str
     code: str
+    event_type: str = "quiz"
     started_at: datetime | None
     ended_at: datetime | None
     duration_seconds: int | None

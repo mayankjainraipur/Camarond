@@ -22,13 +22,14 @@ from ..schemas import (
     ReportLeaderboardEntry,
     TeamStanding,
 )
+from ..services import scoring
 from .deps import get_db
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 COMPLETED = "completed"
 # Question types whose answers are worth showing as a distribution.
-_DISTRIBUTION_TYPES = {"mcq", "true_false"}
+_DISTRIBUTION_TYPES = {"mcq", "true_false", "poll"}
 
 
 def _duration_seconds(event: Event) -> int | None:
@@ -49,12 +50,14 @@ def list_reports(db: Session = Depends(get_db)):
             .where(ParticipantResult.event_id == ev.id)
             .order_by(ParticipantResult.rank)
         ).all()
-        winner = results[0].name if results else None
+        # Polls (and any unscored type) have no winner.
+        winner = results[0].name if (results and scoring.is_scored(ev.event_type)) else None
         out.append(
             ReportEventSummary(
                 id=ev.id,
                 name=ev.name,
                 code=ev.code,
+                event_type=ev.event_type,
                 ended_at=ev.ended_at,
                 participant_count=len(results),
                 team_mode=ev.team_mode,
@@ -80,10 +83,12 @@ def get_report(event_id: int, db: Session = Depends(get_db)):
         select(QuestionResponse).where(QuestionResponse.event_id == event_id)
     ).all()
 
+    # Unscored events (polls) have no meaningful ranking — surface results only.
+    scored = scoring.is_scored(event.event_type)
     leaderboard = [
         ReportLeaderboardEntry(rank=r.rank, name=r.name, score=r.final_score, team=r.team)
         for r in results
-    ]
+    ] if scored else []
 
     # Team standings: group persisted results by team (present only in team mode).
     team_standings: list[TeamStanding] = []
@@ -143,6 +148,7 @@ def get_report(event_id: int, db: Session = Depends(get_db)):
         id=event.id,
         name=event.name,
         code=event.code,
+        event_type=event.event_type,
         started_at=event.started_at,
         ended_at=event.ended_at,
         duration_seconds=_duration_seconds(event),

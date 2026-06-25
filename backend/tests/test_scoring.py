@@ -45,3 +45,40 @@ class TestAwardPoints:
 
     def test_zero_time_limit_avoids_div_by_zero(self):
         assert scoring.award_points(correct=True, base_points=100, speed_bonus=True, time_limit=0, elapsed=0) == 100
+
+
+class TestHintPenalty:
+    def test_hint_halves_points(self):
+        # no speed bonus => 100 base, 50% penalty => 50
+        assert scoring.award_points(
+            correct=True, base_points=100, speed_bonus=False, time_limit=20, elapsed=5,
+            used_hint=True, hint_penalty=50,
+        ) == 50
+
+    def test_hint_applies_after_speed_bonus(self):
+        # instant correct => 200, then 50% penalty => 100
+        assert scoring.award_points(
+            correct=True, base_points=100, speed_bonus=True, time_limit=20, elapsed=0,
+            used_hint=True, hint_penalty=50,
+        ) == 100
+
+    def test_zero_penalty_is_a_no_op(self):
+        assert scoring.award_points(
+            correct=True, base_points=100, speed_bonus=False, time_limit=20, elapsed=5,
+            used_hint=True, hint_penalty=0,
+        ) == 100
+
+    def test_hint_on_wrong_answer_still_zero(self):
+        assert scoring.award_points(
+            correct=False, base_points=100, speed_bonus=False, time_limit=20, elapsed=5,
+            used_hint=True, hint_penalty=50,
+        ) == 0
+
+
+class TestIsScored:
+    def test_poll_is_unscored(self):
+        assert scoring.is_scored("poll") is False
+
+    def test_other_types_are_scored(self):
+        for et in ("quiz", "puzzle", "treasure_hunt"):
+            assert scoring.is_scored(et) is True

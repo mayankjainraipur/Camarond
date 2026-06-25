@@ -40,6 +40,7 @@ def _to_out(db: Session, event: Event) -> EventOut:
         description=event.description,
         code=event.code,
         status=event.status,
+        event_type=event.event_type,
         question_count=_count_matching_questions(db, event),
         team_mode=event.team_mode,
         team_count=event.team_count,
@@ -58,6 +59,7 @@ def create_event(payload: EventCreate, db: Session = Depends(get_db)):
         description=payload.description,
         bank_id=payload.bank_id,
         code=_generate_code(db),
+        event_type=payload.event_type,
         categories=payload.categories,
         difficulty_min=payload.difficulty_min,
         difficulty_max=payload.difficulty_max,
@@ -66,6 +68,7 @@ def create_event(payload: EventCreate, db: Session = Depends(get_db)):
         speed_bonus=payload.speed_bonus,
         leaderboard_after_each=payload.leaderboard_after_each,
         auto_advance=payload.auto_advance,
+        hint_penalty=payload.hint_penalty,
         team_mode=payload.team_mode,
         team_count=payload.team_count,
     )
@@ -81,6 +84,12 @@ def create_event(payload: EventCreate, db: Session = Depends(get_db)):
             detail="Event created would match 0 questions; adjust category/difficulty filters.",
         )
     return out
+
+
+@router.get("", response_model=list[EventOut])
+def list_events(db: Session = Depends(get_db)):
+    events = db.scalars(select(Event).order_by(Event.created_at.desc())).all()
+    return [_to_out(db, ev) for ev in events]
 
 
 @router.get("/{event_id}", response_model=EventOut)

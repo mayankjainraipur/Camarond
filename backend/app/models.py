@@ -28,15 +28,19 @@ class Question(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     bank_id: Mapped[int] = mapped_column(ForeignKey("question_banks.id"))
 
-    # One of: mcq | text | number | true_false
+    # One of: mcq | text | number | true_false | poll
     type: Mapped[str] = mapped_column(String(20))
     content: Mapped[str] = mapped_column(Text)
     # Stored as text; correctness is compared per-type (see services/scoring.py).
-    correct_answer: Mapped[str] = mapped_column(Text)
-    # Only used by mcq; list of option strings.
+    # Optional for poll questions (a poll has no "correct" answer).
+    correct_answer: Mapped[str] = mapped_column(Text, default="")
+    # Used by mcq and poll; list of option strings.
     options: Mapped[list | None] = mapped_column(JSON, nullable=True)
     category: Mapped[str] = mapped_column(String(100), default="General Knowledge")
     difficulty: Mapped[int] = mapped_column(Integer, default=1)
+    # Optional clue/hint for puzzle & treasure-hunt events (revealing it in-game
+    # costs the event's hint_penalty% of the question's points).
+    hint: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     bank: Mapped["QuestionBank"] = relationship(back_populates="questions")
 
@@ -53,6 +57,10 @@ class Event(Base):
     code: Mapped[str] = mapped_column(String(12), unique=True, index=True)
     status: Mapped[str] = mapped_column(String(20), default="created")
 
+    # One of: quiz | puzzle | poll | treasure_hunt. Governs scoring + UI; the
+    # underlying question loop is shared across all types.
+    event_type: Mapped[str] = mapped_column(String(20), default="quiz")
+
     # --- Question selection ---
     # null => all categories; otherwise a list of category names.
     categories: Mapped[list | None] = mapped_column(JSON, nullable=True)
@@ -65,6 +73,9 @@ class Event(Base):
     speed_bonus: Mapped[bool] = mapped_column(default=True)
     leaderboard_after_each: Mapped[bool] = mapped_column(default=True)
     auto_advance: Mapped[bool] = mapped_column(default=False)
+    # Percent (0-100) of a question's points forfeited when a participant
+    # reveals its hint. Only meaningful for puzzle / treasure_hunt events.
+    hint_penalty: Mapped[int] = mapped_column(Integer, default=50)
 
     # --- Team mode (auto-balanced) ---
     team_mode: Mapped[bool] = mapped_column(default=False)

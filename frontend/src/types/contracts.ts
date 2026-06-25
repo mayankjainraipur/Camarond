@@ -24,16 +24,26 @@ export const S2C = {
   ERROR: "error",
 } as const;
 
-export type QuestionType = "mcq" | "text" | "number" | "true_false";
+export type QuestionType = "mcq" | "text" | "number" | "true_false" | "poll";
+export type EventType = "quiz" | "puzzle" | "poll" | "treasure_hunt";
+
+// A single answer tally (poll results / answer distribution).
+export interface DistributionItem {
+  answer: string;
+  count: number;
+}
 
 export interface QuestionShow {
   eventId: number;
+  eventType?: EventType;
   index: number;
   total: number;
   questionId: number;
   type: QuestionType;
   content: string;
   options: string[] | null;
+  hint?: string | null;
+  hintPenalty?: number; // percent forfeited if the hint is revealed
   timeLimit: number;
   startedAt: number;
 }
@@ -51,6 +61,7 @@ export interface TeamEntry {
 export interface LobbyState {
   eventId: number;
   eventName: string;
+  eventType?: EventType;
   state: string;
   participantCount: number;
   participants: string[];
@@ -69,12 +80,16 @@ export interface LeaderboardEntry {
 // Payload of S2C.LEADERBOARD_UPDATE.
 export interface LeaderboardUpdate {
   eventId: number;
+  eventType?: EventType;
   entries: LeaderboardEntry[];
   teams?: TeamEntry[];
+  // Vote tally of the just-locked question; populated for polls ([] otherwise).
+  distribution?: DistributionItem[];
 }
 
 export interface MonitorState {
   eventId: number;
+  eventType?: EventType;
   state: string;
   index: number;
   total: number;
@@ -82,12 +97,16 @@ export interface MonitorState {
   answeredCount: number;
   // host-only: the correct answer for the current question (never sent to players).
   correctAnswer?: string | null;
+  hint?: string | null;
+  // host-only live vote tally for polls.
+  distribution?: DistributionItem[];
   teamMode?: boolean;
   teams?: TeamEntry[];
 }
 
 export interface EventComplete {
   eventId: number;
+  eventType?: EventType;
   leaderboard: LeaderboardEntry[];
   winner: LeaderboardEntry | null;
   teamMode?: boolean;

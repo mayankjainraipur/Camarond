@@ -57,6 +57,52 @@ def test_bad_rows_are_skipped_and_reported():
     assert len(errors) == 4
 
 
+def test_poll_allows_blank_correct_answer_with_options():
+    csv = (
+        "type,content,correct_answer,options,category\n"
+        "poll,Favourite language?,,Python|Go|Rust,Tech\n"
+    ).encode()
+    questions, errors = parse_questions("b.csv", csv)
+    assert errors == []
+    assert len(questions) == 1
+    q = questions[0]
+    assert q["type"] == "poll"
+    assert q["correct_answer"] == ""
+    assert q["options"] == ["Python", "Go", "Rust"]
+
+
+def test_poll_needs_options():
+    csv = (
+        "type,content,correct_answer,options\n"
+        "poll,One option only?,,Solo\n"
+    ).encode()
+    questions, errors = parse_questions("b.csv", csv)
+    assert questions == []
+    assert len(errors) == 1
+
+
+def test_hint_column_is_parsed():
+    csv = (
+        "type,content,correct_answer,options,category,difficulty,hint\n"
+        "text,I speak without a mouth?,echo,,Riddles,6,You repeat after others\n"
+        "number,Cricket players?,11,,Sports,2,\n"
+    ).encode()
+    questions, errors = parse_questions("b.csv", csv)
+    assert errors == []
+    assert questions[0]["hint"] == "You repeat after others"
+    assert questions[1]["hint"] is None  # blank hint => None
+
+
+def test_missing_correct_answer_still_rejected_for_non_poll():
+    csv = (
+        "type,content,correct_answer,options\n"
+        "text,No answer here,,\n"
+    ).encode()
+    questions, errors = parse_questions("b.csv", csv)
+    assert questions == []
+    assert len(errors) == 1
+
+
 def test_invalid_difficulty_defaults_to_one_with_warning():
     csv = (
         "type,content,correct_answer,options,difficulty\n"

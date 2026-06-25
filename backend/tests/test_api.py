@@ -39,6 +39,29 @@ def test_create_team_event_echoes_team_fields(client, seeded_bank):
     assert ev["team_mode"] is True and ev["team_count"] == 3
 
 
+def test_create_event_defaults_to_quiz_type(client, seeded_bank):
+    ev = client.post("/api/events", json={"name": "Default", "bank_id": seeded_bank}).json()
+    assert ev["event_type"] == "quiz"
+
+
+def test_create_event_each_type(client, seeded_bank):
+    for et in ("puzzle", "poll", "treasure_hunt"):
+        res = client.post(
+            "/api/events",
+            json={"name": f"E-{et}", "bank_id": seeded_bank, "event_type": et, "hint_penalty": 40},
+        )
+        assert res.status_code == 200, res.text
+        assert res.json()["event_type"] == et
+
+
+def test_create_event_rejects_unknown_type(client, seeded_bank):
+    res = client.post(
+        "/api/events",
+        json={"name": "Bad", "bank_id": seeded_bank, "event_type": "battle_royale"},
+    )
+    assert res.status_code == 422  # pydantic Literal validation
+
+
 def test_create_event_unknown_bank_404(client):
     res = client.post("/api/events", json={"name": "X", "bank_id": 999999})
     assert res.status_code == 404

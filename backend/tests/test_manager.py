@@ -67,6 +67,104 @@ class TestGameplay:
         assert s.submit_answer("a", "true")["accepted"] is False
 
 
+def make_poll_session():
+    return GameSession(
+        event_id=2,
+        event_name="Poll",
+        time_limit=20,
+        base_points=100,
+        speed_bonus=False,
+        leaderboard_after_each=True,
+        auto_advance=False,
+        questions=[
+            {"type": "poll", "content": "Best language?", "correct_answer": "",
+             "options": ["Python", "Go", "Rust"], "hint": None},
+        ],
+        event_type="poll",
+    )
+
+
+def make_puzzle_session(hint_penalty=50):
+    return GameSession(
+        event_id=3,
+        event_name="Puzzle",
+        time_limit=20,
+        base_points=100,
+        speed_bonus=False,  # deterministic
+        leaderboard_after_each=True,
+        auto_advance=False,
+        questions=[
+            {"type": "text", "content": "Clue one", "correct_answer": "alpha",
+             "options": None, "hint": "starts with A"},
+            {"type": "text", "content": "Clue two", "correct_answer": "beta",
+             "options": None, "hint": "starts with B"},
+        ],
+        event_type="puzzle",
+        hint_penalty=hint_penalty,
+    )
+
+
+class TestPoll:
+    def test_poll_is_unscored_and_records_votes(self):
+        s = make_poll_session()
+        assert s.scored is False
+        s.add_participant("a", "Alice")
+        s.add_participant("b", "Bob")
+        s.show_next()
+        r = s.submit_answer("a", "Python")
+        assert r["accepted"] is True and r.get("recorded") is True
+        assert "correct" not in r
+        s.submit_answer("b", "Python")
+        # no points awarded
+        assert all(p.score == 0 for p in s.participants.values())
+
+    def test_distribution_tallies_votes(self):
+        s = make_poll_session()
+        for sid in ("a", "b", "c"):
+            s.add_participant(sid, sid.upper())
+        s.show_next()
+        s.submit_answer("a", "Python")
+        s.submit_answer("b", "Python")
+        s.submit_answer("c", "Go")
+        dist = s.distribution()
+        assert dist[0] == {"answer": "Python", "count": 2}
+        assert {"answer": "Go", "count": 1} in dist
+
+    def test_monitor_carries_distribution_for_poll(self):
+        s = make_poll_session()
+        s.add_participant("a", "Alice")
+        s.show_next()
+        s.submit_answer("a", "Rust")
+        assert s.monitor_state()["distribution"] == [{"answer": "Rust", "count": 1}]
+
+
+class TestHints:
+    def test_hint_penalty_reduces_points(self):
+        s = make_puzzle_session(hint_penalty=50)
+        s.add_participant("a", "Alice")
+        s.add_participant("b", "Bob")
+        s.show_next()
+        clean = s.submit_answer("a", "alpha")          # no hint -> full 100
+        hinted = s.submit_answer("b", "alpha", used_hint=True)  # 50% off -> 50
+        assert clean["points"] == 100
+        assert hinted["points"] == 50 and hinted["usedHint"] is True
+
+    def test_hint_exposed_in_question_payload(self):
+        s = make_puzzle_session()
+        s.show_next()
+        payload = s.question_payload()
+        assert payload["hint"] == "starts with A"
+        assert payload["hintPenalty"] == 50
+        assert payload["eventType"] == "puzzle"
+
+    def test_questions_served_in_order(self):
+        s = make_puzzle_session()
+        s.show_next()
+        assert s.current_question()["correct_answer"] == "alpha"
+        s.show_next()
+        assert s.current_question()["correct_answer"] == "beta"
+
+
 class TestTeams:
     def test_off_by_default(self):
         s = make_session()

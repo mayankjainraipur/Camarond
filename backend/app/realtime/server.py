@@ -163,6 +163,7 @@ async def participant_join(sid, data):
         "ok": True,
         "participantId": sid,
         "eventName": session.event_name,
+        "eventType": session.event_type,
         "state": session.state,
     }
     if session.team_mode:
@@ -183,8 +184,11 @@ async def participant_answer(sid, data):
     if session is None:
         return {"ok": False, "error": "no_session"}
 
-    result = session.submit_answer(sid, data.get("answer"))
-    # Tell the host how many have answered (drives "X / N submitted").
+    result = session.submit_answer(
+        sid, data.get("answer"), used_hint=bool(data.get("usedHint"))
+    )
+    # Tell the host how many have answered (drives "X / N submitted") and,
+    # for polls, lets the host watch the live vote tally accumulate.
     await sio.emit(S2C.HOST_MONITOR, session.monitor_state(), room=_host_room(event_id))
     return {"ok": True, **result}
 
@@ -225,10 +229,11 @@ async def _question_timer(event_id: int, index: int, time_limit: int) -> None:
     await sio.emit(
         S2C.QUESTION_LOCK, {"eventId": event_id, "questionId": index}, room=_room(event_id)
     )
-    if session.leaderboard_after_each:
+    # Polls always reveal their tally at lock; scored events honour the setting.
+    if session.leaderboard_after_each or not session.scored:
         await _broadcast_leaderboard(event_id)
     if session.auto_advance:
-        await sio.sleep(3)  # brief pause to show the leaderboard
+        await sio.sleep(3)  # brief pause to show the leaderboard / results
         await _push_next(event_id)
 
 
@@ -240,8 +245,11 @@ async def _broadcast_leaderboard(event_id: int) -> None:
         S2C.LEADERBOARD_UPDATE,
         {
             "eventId": event_id,
+            "eventType": session.event_type,
             "entries": session.leaderboard(),
             "teams": session.team_leaderboard(),  # [] when team mode is off
+            # Vote tally of the just-locked question; rendered for polls.
+            "distribution": session.distribution() if not session.scored else [],
         },
         room=_room(event_id),
     )
@@ -254,15 +262,18 @@ async def _complete(event_id: int) -> None:
     session.complete()
     board = session.leaderboard()
     teams = session.team_leaderboard()
+    scored = session.scored
     await sio.emit(
         S2C.EVENT_COMPLETE,
         {
             "eventId": event_id,
-            "leaderboard": board,
-            "winner": board[0] if board else None,
+            "eventType": session.event_type,
+            "leaderboard": board if scored else [],
+            # Polls have no winner — they conclude with aggregate results.
+            "winner": board[0] if (scored and board) else None,
             "teamMode": session.team_mode,
             "teams": teams,
-            "winningTeam": teams[0] if teams else None,
+            "winningTeam": teams[0] if (scored and teams) else None,
         },
         room=_room(event_id),
     )
