@@ -1,0 +1,18 @@
+services:
+  camarond:
+    build: .
+    image: camarond
+    ports:
+      - "8000:8000"
+    environment:
+      # Defaults baked into the image already work; override here if needed.
+      # HOST_PASSWORD: admin
+      # CORS_ORIGINS: "*"
+      DATABASE_URL: sqlite:///./data/camarond.db
+    volumes:
+      # Persist the SQLite DB (banks, events, results) across restarts.
+      - camarond-data:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  camarond-data:

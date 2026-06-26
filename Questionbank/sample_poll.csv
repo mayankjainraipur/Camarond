@@ -1,0 +1,11 @@
+type,content,correct_answer,options,category,difficulty
+poll,What is your favorite programming language?,,Python|JavaScript|Java|Go|asdda|asasd|asads|asfa,Technology,1
+poll,Which framework do you prefer for web development?,,React|Vue|Angular|Svelte,Technology,2
+poll,How do you prefer to learn new technologies?,,Video tutorials|Documentation|Books|Hands-on projects,Learning,1
+poll,What is your biggest challenge when coding?,,Debugging|Finding good resources|Time management|Understanding requirements,General,2
+poll,Which cloud provider do you use most?,,AWS|Azure|Google Cloud|None,Technology,3
+poll,What is your preferred code editor?,,VS Code|IntelliJ|Vim/Neovim|Sublime Text,Technology,1
+poll,How many hours per day do you code on average?,,Less than 2|2-4 hours|4-6 hours|More than 6,General,1
+poll,What type of projects excite you the most?,,Web apps|Mobile apps|Data science|DevOps/Infra,Technology,2
+poll,Which is your preferred database type?,,Relational (SQL)|Document (NoSQL)|Graph|Key-Value,Technology,3
+poll,How do you feel about remote work?,,Love it|Prefer office|Hybrid is best|Depends on the day,General,1

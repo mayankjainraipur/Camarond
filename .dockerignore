@@ -1,0 +1,26 @@
+# Dependencies / build artifacts (rebuilt inside the image)
+**/node_modules
+**/dist
+**/.venv
+**/venv
+
+# Local database (never ship a stale DB into the image)
+backend/camarond.db
+backend/data
+
+# Python caches & tests
+**/__pycache__
+**/*.pyc
+backend/tests
+backend/.pytest_cache
+
+# Version control & editor/OS cruft
+.git
+.gitignore
+**/.DS_Store
+.vscode
+.idea
+**/*.log
+
+# Docs/sample data not needed at build time
+*.md
