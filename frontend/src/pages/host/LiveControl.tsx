@@ -283,7 +283,7 @@ function NowOnAir({
   }, [question.questionId, deadline]);
 
   const pct = Math.max(0, Math.min(100, (remaining / question.timeLimit) * 100));
-  const tags = ["A", "B", "C", "D", "E", "F"];
+  const tag = (i: number) => String.fromCharCode(65 + i);
   const norm = (s: string) => s.trim().toLowerCase();
   const isCorrect = (o: string) => correctAnswer != null && norm(o) === norm(correctAnswer);
 
@@ -316,7 +316,7 @@ function NowOnAir({
             <div className="host-opts">
               {question.options.map((o, i) => (
                 <div key={o} className={`host-opt ${isCorrect(o) ? "correct" : ""}`}>
-                  <span className="tag">{tags[i] ?? "•"}</span>
+                  <span className="tag">{tag(i)}</span>
                   {o}
                   {isCorrect(o) && <span className="host-opt-check">✓</span>}
                 </div>

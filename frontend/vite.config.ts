@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true, // listen on 0.0.0.0 so ngrok / LAN devices can reach it
+    allowedHosts: true, // accept any Host header (e.g. ngrok tunnel domains)
     proxy: {
       "/api": { target: "http://localhost:8000", changeOrigin: true },
       "/socket.io": { target: "http://localhost:8000", ws: true, changeOrigin: true },

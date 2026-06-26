@@ -305,7 +305,7 @@ function QuestionView({
 
   const pct = (remaining / question.timeLimit) * 100;
   const disabled = submitted || locked || remaining <= 0;
-  const tags = ["A", "B", "C", "D", "E", "F"];
+  const tag = (i: number) => String.fromCharCode(65 + i);
   const hasHint = !isPoll && !!question.hint;
   const penalty = question.hintPenalty ?? 0;
   const counterLabel = isPoll ? "Poll" : "Question";
@@ -345,7 +345,7 @@ function QuestionView({
             disabled={disabled}
             onClick={() => submit(o)}
           >
-            <span className="tag">{tags[i] ?? "•"}</span>
+            <span className="tag">{tag(i)}</span>
             {o}
           </button>
         ))}
@@ -357,7 +357,7 @@ function QuestionView({
             disabled={disabled}
             onClick={() => submit(o)}
           >
-            <span className="tag">{tags[i]}</span>
+            <span className="tag">{tag(i)}</span>
             {o}
           </button>
         ))}

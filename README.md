@@ -55,7 +55,39 @@ Questionbank/
   sample_questions.csv # ready-to-upload test bank
 ```
 
-## Run it locally
+## Run with Docker (recommended for sharing)
+
+The whole app — backend, Socket.IO, and the built frontend — ships as **one
+container** serving everything on a single port. Recipients only need Docker.
+
+```bash
+docker compose up --build
+```
+
+Then open **http://localhost:8000** and use the app exactly as below. The host
+console is at `/host` (default password: `admin`).
+
+- **Persistence:** banks, events, and results are stored in a named volume
+  (`camarond-data`), so they survive `docker compose down` / restarts. The live,
+  in-progress game is in memory and is lost if the container restarts mid-event.
+- **One port:** unlike local dev (which uses Vite on `:5173`), the container
+  serves the frontend and `/api` + `/socket.io` from the same origin on `:8000`.
+- **Config:** defaults (`HOST_PASSWORD=admin`, `CORS_ORIGINS=*`) work out of the
+  box. Override via the `environment:` block in `docker-compose.yml` if needed.
+
+### Sharing it over the internet (Docker + ngrok)
+
+ngrok runs **on your host**, not inside the container. With the container up,
+in a separate terminal:
+
+```bash
+ngrok http 8000
+```
+
+Share the `https://<id>.ngrok-free.app/play?code=XXXXXX` URL with participants.
+`CORS_ORIGINS=*` already allows the tunnel domain, so no extra config is needed.
+
+## Run it locally (without Docker)
 
 ### 1. Backend
 
@@ -109,16 +141,17 @@ loop end-to-end.
 
 ## Going live over the internet (ngrok)
 
-The frontend talks to the backend same-origin (Vite proxy), so expose the
-**Vite port**:
+**With Docker** (recommended) the frontend and API share one origin on `:8000`,
+so just `ngrok http 8000` — see [Run with Docker](#run-with-docker-recommended-for-sharing).
+
+For the **non-Docker dev setup**, the frontend talks to the backend same-origin
+via the Vite proxy, so expose the **Vite port** instead:
 
 ```bash
 ngrok http 5173
 ```
 
 Share the `https://<id>.ngrok-free.app/play?code=XXXXXX` URL with participants.
-(For production you'd build the frontend and serve it behind one host with the
-API.)
 
 ## Question bank format
 

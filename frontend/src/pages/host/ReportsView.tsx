@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Board from "../../components/Board";
 import PollResults from "../../components/PollResults";
 import { EventReport, QuestionStat, ReportEventSummary, getReport, listReports } from "../../lib/api";
+import { csvFilename, reportToCsv } from "../../lib/reportCsv";
+import { saveTextFile } from "../../lib/download";
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "—";
@@ -89,9 +91,17 @@ function ReportDetail({ id, onBack }: { id: number; onBack: () => void }) {
 
   return (
     <div className="dash-cards">
-      <button className="host-btn host-btn-ghost" style={{ alignSelf: "flex-start" }} onClick={onBack}>
-        ← Back to list
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+        <button className="host-btn host-btn-ghost" onClick={onBack}>
+          ← Back to list
+        </button>
+        <button
+          className="host-btn"
+          onClick={() => saveTextFile(csvFilename(report), reportToCsv(report), "text/csv")}
+        >
+          ⬇ Export CSV
+        </button>
+      </div>
 
       <div className="host-card">
         <h2>{report.name}</h2>
