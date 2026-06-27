@@ -13,6 +13,9 @@ const TYPES: { id: EventType; emoji: string; t: string; d: string }[] = [
 // Sensible per-type starting points.
 const DEFAULT_TIME: Record<EventType, number> = { quiz: 20, puzzle: 60, poll: 30, treasure_hunt: 90 };
 
+// Cap the "Recent events" list — newest first; older ones aren't shown here.
+const RECENT_LIMIT = 12;
+
 export default function Events() {
   const { goLive } = useHost();
   const nav = useNavigate();
@@ -180,26 +183,28 @@ export default function Events() {
         {events.length === 0 ? (
           <p className="host-empty">No events yet. Create one to take it live.</p>
         ) : (
-          events.map((ev) => (
-            <div key={ev.id} className="evt-row">
-              <span className="nm" style={{ display: "flex", flexDirection: "column" }}>
-                <b>{ev.name}</b>
-                <span className="meta">
-                  code {ev.code} · {ev.question_count} questions · {ev.status}
+          <div className="evt-list">
+            {events.slice(0, RECENT_LIMIT).map((ev) => (
+              <div key={ev.id} className="evt-row">
+                <span className="nm" style={{ display: "flex", flexDirection: "column" }}>
+                  <b>{ev.name}</b>
+                  <span className="meta">
+                    code {ev.code} · {ev.question_count} questions · {ev.status}
+                  </span>
                 </span>
-              </span>
-              <span className="evt-badge">{ev.event_type.replace("_", " ")}</span>
-              <button
-                className="host-btn host-btn-ghost"
-                onClick={() => {
-                  goLive(ev);
-                  nav("/host/live");
-                }}
-              >
-                {ev.status === "completed" ? "Reopen" : "Go live"}
-              </button>
-            </div>
-          ))
+                <span className="evt-badge">{ev.event_type.replace("_", " ")}</span>
+                <button
+                  className="host-btn host-btn-ghost"
+                  onClick={() => {
+                    goLive(ev);
+                    nav("/host/live");
+                  }}
+                >
+                  {ev.status === "completed" ? "Reopen" : "Go live"}
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

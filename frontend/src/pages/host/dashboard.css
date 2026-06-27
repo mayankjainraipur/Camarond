@@ -104,7 +104,10 @@
 }
 .check-row input { width: auto; margin: 0; }
 
-/* event list rows */
+/* event list — scrolls within the card instead of growing the page */
+.evt-list {
+  max-height: 460px; overflow-y: auto; margin: -4px -6px 0; padding: 4px 6px;
+}
 .evt-row {
   display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px;
   padding: 14px 16px; border-radius: 12px; margin-bottom: 8px;
