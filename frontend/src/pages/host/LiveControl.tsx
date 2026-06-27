@@ -11,6 +11,7 @@ import {
   MonitorState,
   QuestionShow,
   TeamEntry,
+  UpcomingQuestion,
 } from "../../types/contracts";
 import { useHost } from "./DashboardLayout";
 
@@ -44,6 +45,7 @@ function Live({ onCleared }: { onCleared: () => void }) {
   const [board, setBoard] = useState<LeaderboardEntry[]>([]);
   const [teams, setTeams] = useState<TeamEntry[]>([]);
   const [distribution, setDistribution] = useState<DistributionItem[]>([]);
+  const [upcoming, setUpcoming] = useState<UpcomingQuestion | null>(null);
   const [done, setDone] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -59,6 +61,7 @@ function Live({ onCleared }: { onCleared: () => void }) {
       setMonitor(d);
       if (d.teams) setTeams(d.teams);
       if (d.distribution) setDistribution(d.distribution);
+      setUpcoming(d.upcoming ?? null);
     };
     const onQuestion = (d: QuestionShow) => setQuestion(d);
     const onBoard = (d: LeaderboardUpdate) => {
@@ -81,6 +84,7 @@ function Live({ onCleared }: { onCleared: () => void }) {
       if (!ack?.ok) return;
       if (ack.monitor) setMonitor(ack.monitor);
       if (ack.monitor?.teams) setTeams(ack.monitor.teams);
+      setUpcoming(ack.monitor?.upcoming ?? null);
       if (ack.currentQuestion) setQuestion(ack.currentQuestion);
       if (ack.leaderboard?.length) setBoard(ack.leaderboard);
       if (ack.sessionState === "completed") setDone(true);
@@ -166,7 +170,7 @@ function Live({ onCleared }: { onCleared: () => void }) {
         </div>
       </div>
 
-      {/* Right: telemetry + question + standings/results */}
+      {/* Center: telemetry + question + what's next */}
       <div className="host-col">
         <div className="host-tiles">
           <div className="host-tile accent">
@@ -200,6 +204,18 @@ function Live({ onCleared }: { onCleared: () => void }) {
           />
         )}
 
+        {!done && (
+          <Upcoming
+            upcoming={upcoming}
+            started={started}
+            isPoll={isPoll}
+            isTreasure={isTreasure}
+          />
+        )}
+      </div>
+
+      {/* Right: standings / live poll results */}
+      <div className="host-col">
         {/* Polls: live results instead of a leaderboard */}
         {isPoll ? (
           <div className="host-card">
@@ -249,6 +265,37 @@ function Live({ onCleared }: { onCleared: () => void }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function Upcoming({
+  upcoming,
+  started,
+  isPoll,
+  isTreasure,
+}: {
+  upcoming: UpcomingQuestion | null;
+  started: boolean;
+  isPoll: boolean;
+  isTreasure: boolean;
+}) {
+  const noun = isTreasure ? "clue" : isPoll ? "poll" : "question";
+  return (
+    <div className="host-card host-upcoming">
+      <h2>Upcoming</h2>
+      {upcoming ? (
+        <div className="host-upcoming-item">
+          <span className="host-upcoming-idx">{upcoming.index + 1}</span>
+          <p className="host-upcoming-text">{upcoming.content}</p>
+        </div>
+      ) : (
+        <p className="host-empty">
+          {started
+            ? `This is the final ${noun} — nothing queued after it.`
+            : `No ${noun}s queued.`}
+        </p>
+      )}
     </div>
   );
 }

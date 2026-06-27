@@ -132,8 +132,19 @@
 .host-error { color: var(--signal); font-size: 14px; margin-top: 12px; }
 
 /* ---------- Layout ---------- */
-.host-deck { display: grid; grid-template-columns: 360px 1fr; gap: 18px; margin-top: 18px; }
-.host-col { display: flex; flex-direction: column; gap: 18px; }
+.host-deck { display: grid; grid-template-columns: 340px minmax(0, 1fr) 340px; gap: 18px; margin-top: 18px; }
+.host-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* ---------- Upcoming card ---------- */
+.host-upcoming-item { display: flex; align-items: flex-start; gap: 12px; }
+.host-upcoming-idx {
+  flex: none; width: 30px; height: 30px; border-radius: 8px;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 14px; font-weight: 600;
+  color: var(--muted); background: var(--panel-2);
+  border: 1px dashed var(--line);
+}
+.host-upcoming-text { margin: 4px 0 0; color: var(--muted); line-height: 1.4; }
 
 /* ---------- Broadcast / join card ---------- */
 .host-broadcast { display: flex; flex-direction: column; gap: 18px; align-items: stretch; }
@@ -251,8 +262,14 @@
 .host-gate { max-width: 420px; margin: 12vh auto 0; }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  /* Drop the standings rail under the stage; controls stay beside it. */
+  .host-deck { grid-template-columns: 340px minmax(0, 1fr); }
+  .host-deck > .host-col:last-child { grid-column: 1 / -1; }
+}
 @media (max-width: 880px) {
   .host-deck { grid-template-columns: 1fr; }
+  .host-deck > .host-col:last-child { grid-column: auto; }
 }
 @media (max-width: 560px) {
   .host-tiles { grid-template-columns: 1fr; }

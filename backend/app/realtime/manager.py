@@ -278,6 +278,10 @@ class GameSession:
         # host-only channel — safe to include the correct answer here so the
         # host can see it under the live question (never sent to participants).
         q = self.current_question()
+        # Next question in the bank (host-only preview). Before start (index -1)
+        # this is the first question; None once the bank is exhausted.
+        nxt_index = self.index + 1
+        nxt = self.questions[nxt_index] if nxt_index < self.total else None
         return {
             "eventId": self.event_id,
             "eventType": self.event_type,
@@ -288,6 +292,16 @@ class GameSession:
             "answeredCount": self.answered_count(),
             "correctAnswer": q.get("correct_answer") if q else None,
             "hint": q.get("hint") if q else None,
+            # host-only preview of what's next; None when this is the last one.
+            "upcoming": (
+                {
+                    "index": nxt_index,
+                    "type": nxt.get("type"),
+                    "content": nxt.get("content"),
+                }
+                if nxt
+                else None
+            ),
             # Live vote tally for polls; the host watches it accumulate.
             "distribution": self.distribution() if not self.scored else [],
             "teamMode": self.team_mode,

@@ -48,6 +48,8 @@ class S2C:
 #     the server applies the hint_penalty% deduction authoritatively.
 #   - leaderboard:update / host:monitor add  {distribution: [{answer, count}]}
 #     — the vote tally, populated for unscored poll events ([] otherwise).
+#   - host:monitor adds  {upcoming: {index, type, content} | None}  — host-only
+#     preview of the next question; None once the bank is exhausted.
 #   - Poll (unscored): event:complete has winner=null and leaderboard=[];
 #     answer acks return {recorded: true} instead of {correct, points}.
 # --------------------------------------------------------------------------

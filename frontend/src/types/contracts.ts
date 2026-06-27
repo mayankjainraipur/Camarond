@@ -100,8 +100,17 @@ export interface MonitorState {
   hint?: string | null;
   // host-only live vote tally for polls.
   distribution?: DistributionItem[];
+  // host-only preview of the next question; null once the bank is exhausted.
+  upcoming?: UpcomingQuestion | null;
   teamMode?: boolean;
   teams?: TeamEntry[];
+}
+
+// host-only peek at the next question/clue (shown under "Now on air").
+export interface UpcomingQuestion {
+  index: number;
+  type: QuestionType;
+  content: string;
 }
 
 export interface EventComplete {
